@@ -1,0 +1,55 @@
+{
+  "name": "hermes-copybot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Polymarket Copy Trading Bot — Paper trading simulation with auto-improving rules and Vercel dashboard",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:migrate": "drizzle-kit push",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio",
+    "seed": "tsx scripts/seed.ts",
+    "scan:leaderboard": "tsx scripts/scan-leaderboard.ts",
+    "scan:wallets": "tsx scripts/scan-wallets.ts",
+    "monitor:trades": "tsx scripts/monitor-trades.ts",
+    "score:trades": "tsx scripts/score-trades.ts",
+    "paper:update-pnl": "tsx scripts/update-pnl.ts",
+    "review:outcomes": "tsx scripts/review-outcomes.ts",
+    "update:rules": "tsx scripts/update-rules.ts",
+    "report:daily": "tsx scripts/report-daily.ts",
+    "backtest": "tsx scripts/backtest.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "date-fns": "^4.1.0",
+    "drizzle-orm": "^0.38.0",
+    "lucide-react": "^0.468.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^2.15.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.5.2",
+    "drizzle-kit": "^0.30.0",
+    "eslint": "^9.16.0",
+    "eslint-config-next": "^15.1.0",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
