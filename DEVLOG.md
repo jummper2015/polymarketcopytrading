@@ -763,8 +763,71 @@ Creado `tests/scoring/trade-scoring.test.ts` con 85 tests unitarios, todos pasan
 | 2026-07-12 | Hito 4.3: review-outcomes | Revisor de resultados + OutcomeReview | N/A | ~180 |
 | 2026-07-12 | Hito 5.1: Rule Engine | Motor de reglas versionadas + automejora | N/A | ~280 |
 | 2026-07-12 | Hito 5.2: update-rules | Script de auto-actualizacion de reglas | N/A | ~150 |
+| 2026-07-12 | Hito 6.1: Daily Report | Generador de reportes diarios + formato Telegram | N/A | ~350 |
 
-### [2026-07-12] — Hito 4.2: Script update-pnl
+### [2026-07-12] — Hito 6.1: Generador de Reportes Diarios
+
+**Rama:** `main`
+**Estado:** ✅ Completado
+
+**Resumen:**
+Implementado `lib/reports/daily-report.ts` (~350 líneas). Genera reportes diarios con métricas del portafolio simulado, mejores/peores wallets, cambios de reglas, y formato para Telegram.
+
+**Funciones principales:**
+
+| Función | Descripción |
+|---------|-------------|
+| `generateDailyReport(dateStr?)` | Genera reporte completo: portfolio stats, signal counts del día, wallet performance agregada, rule changes, summary. Persiste en `daily_reports` (upsert delete+insert) |
+| `formatReportForTelegram(report)` | Formatea el reporte en Markdown con emojis para envío por Telegram |
+| `getDailyReport(dateStr)` | Carga reporte guardado por fecha |
+| `getAllDailyReports()` | Lista todos los reportes, más reciente primero |
+| `markReportSent(dateStr)` | Marca reporte como enviado a Telegram |
+
+**Métricas del reporte:**
+- **Portfolio**: PnL total, win rate, posiciones abiertas
+- **Señales**: Total, paper_copy, watchlist, skip del día
+- **Wallets**: Top 5 mejores y peores por PnL simulado (agregado en memoria)
+- **Reglas**: Cambios aplicados hoy con before/after version
+- **Summary**: Texto generado con emojis y métricas clave
+
+**Telegram format**: Mensaje Markdown con secciones (Performance, Signals, Top/Worst Wallets, Rule Changes) usando `*bold*`, \`code\`, `_italic_`.
+
+**Decisiones tomadas:**
+- **between() con as any para timestamps**: Drizzle tiene tipos complejos para columnas timestamp-mode. `between(col as any, start as any, end as any)` funciona correctamente en runtime con Unix timestamps.
+- **Upsert delete+insert**: Más simple que ON CONFLICT, válido para script mono-proceso.
+- **Agregación de wallets en memoria**: Para <1000 paper trades, más simple que SQL GROUP BY.
+
+**Archivos modificados:**
+- `lib/reports/daily-report.ts` — Implementación completa (~350 líneas)
+
+**Próximos pasos:**
+- [ ] Hito 6.2: Integración Telegram (`lib/notifications/telegram.ts`)
+- [ ] Hito 6.3: Script `report:daily` — Orquesta generación + envío
+
+---
+
+## Métricas de Desarrollo
+
+| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
+|-------|------|--------------------|---------------|------------------|
+| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
+| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
+| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
+| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
+| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
+| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
+| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
+| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
+| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
+| 2026-07-12 | Hito 3.4: Tests trade-scoring | 85 tests unitarios, todos pasando | 217/217 ✅ | ~640 |
+| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
+| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
+| 2026-07-12 | Hito 4.1: Paper Trader | Motor de simulación completo | N/A | ~430 |
+| 2026-07-12 | Hito 4.2: update-pnl | Actualizador horario de PnL | N/A | ~120 |
+| 2026-07-12 | Hito 4.3: review-outcomes | Revisor de resultados + OutcomeReview | N/A | ~180 |
+| 2026-07-12 | Hito 5.1: Rule Engine | Motor de reglas versionadas + automejora | N/A | ~280 |
+| 2026-07-12 | Hito 5.2: update-rules | Script de auto-actualizacion de reglas | N/A | ~150 |
+| 2026-07-12 | Hito 6.1: Daily Report | Generador de reportes diarios + Telegram | N/A | ~350 |
 
 **Rama:** `main`
 **Estado:** ✅ Completado
