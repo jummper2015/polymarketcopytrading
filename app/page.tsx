@@ -1,8 +1,60 @@
+import { db } from "@/db";
+import { walletProfiles, pnlSnapshots } from "@/db/schema";
+import { asc, eq } from "drizzle-orm";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/ui/status-dot";
+import { PnlChart, type PnlDataPoint } from "@/components/charts/pnl-chart";
+import { getPaperPortfolioStats } from "@/lib/simulation/paper-trader";
 
-export default function Home() {
+export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
+export default async function Home() {
+  const stats = await getPaperPortfolioStats();
+
+  // Active tracking wallets
+  const trackWallets = await db
+    .select({ id: walletProfiles.id })
+    .from(walletProfiles)
+    .where(eq(walletProfiles.status, "track"))
+    .limit(500);
+  const trackCount = trackWallets.length;
+
+  // ── PnL chart data ────────────────────────────────────────
+  const snapshots = await db
+    .select({
+      pnl: pnlSnapshots.pnl,
+      collectedAt: pnlSnapshots.collectedAt,
+    })
+    .from(pnlSnapshots)
+    .orderBy(asc(pnlSnapshots.collectedAt))
+    .limit(300);
+
+  const pnlByDay = new Map<string, number>();
+  for (const s of snapshots) {
+    const day =
+      s.collectedAt instanceof Date
+        ? s.collectedAt.toISOString().slice(0, 10)
+        : new Date(
+            (s.collectedAt as unknown as number) * 1000
+          ).toISOString().slice(0, 10);
+    pnlByDay.set(day, (pnlByDay.get(day) ?? 0) + (s.pnl ?? 0));
+  }
+  let cumulative = 0;
+  const pnlData: PnlDataPoint[] = [];
+  for (const [day, dailyPnl] of [...pnlByDay.entries()].sort()) {
+    cumulative += dailyPnl;
+    pnlData.push({
+      date: day.slice(5),
+      pnl: Math.round(cumulative * 100) / 100,
+    });
+  }
+
+  const totalPnl = stats.totalPnl;
+  const pnlSign = totalPnl >= 0 ? "+" : "";
+  const pnlClass = totalPnl >= 0 ? "text-brand-400" : "text-red-400";
+
   return (
     <div className="animate-fade-in space-y-6">
       {/* Page header */}
@@ -23,7 +75,9 @@ export default function Home() {
           icon="💰"
           subtitle="Total unrealized + realized"
         >
-          <p className="stat-value text-brand-400">—</p>
+          <p className={`stat-value ${pnlClass}`}>
+            {pnlSign}${totalPnl.toFixed(2)}
+          </p>
         </Card>
 
         <Card
@@ -31,7 +85,14 @@ export default function Home() {
           icon="🎯"
           subtitle="Sobre trades resueltos"
         >
-          <p className="stat-value text-surface-50">—</p>
+          <p className="stat-value text-surface-50">
+            {stats.resolvedCount > 0
+              ? `${(stats.winRate * 100).toFixed(1)}%`
+              : "—"}
+          </p>
+          <p className="text-xs text-surface-500 mt-1">
+            {stats.winCount}W / {stats.lossCount}L
+          </p>
         </Card>
 
         <Card
@@ -39,7 +100,12 @@ export default function Home() {
           icon="📊"
           subtitle="Paper trades activos"
         >
-          <p className="stat-value text-amber-400">—</p>
+          <p className="stat-value text-amber-400">
+            {stats.openCount}
+          </p>
+          <p className="text-xs text-surface-500 mt-1">
+            Unrealized: ${stats.totalUnrealizedPnl.toFixed(2)}
+          </p>
         </Card>
 
         <Card
@@ -47,9 +113,17 @@ export default function Home() {
           icon="👥"
           subtitle="En seguimiento activo"
         >
-          <p className="stat-value text-blue-400">—</p>
+          <p className="stat-value text-blue-400">{trackCount}</p>
+          <p className="text-xs text-surface-500 mt-1">
+            {stats.resolvedCount} resolved
+          </p>
         </Card>
       </div>
+
+      {/* PnL Chart */}
+      <Card title="Cumulative PnL" subtitle="Paper trading performance over time" icon="📈">
+        <PnlChart data={pnlData} />
+      </Card>
 
       {/* Second row: Signals + Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -86,7 +160,7 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-surface-400">
-                Hermes v1.0 — Dashboard en construcción
+                Hermes v1.0 — {stats.resolvedCount + stats.openCount} trades
               </span>
             </div>
           </div>

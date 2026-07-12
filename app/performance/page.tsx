@@ -1,7 +1,13 @@
 import { db } from "@/db";
-import { paperTrades } from "@/db/schema";
+import { paperTrades, pnlSnapshots } from "@/db/schema";
+import { desc, asc } from "drizzle-orm";
 import { Card } from "@/components/ui/card";
 import { ScoreBar } from "@/components/ui/score-bar";
+import { PnlChart, type PnlDataPoint } from "@/components/charts/pnl-chart";
+import {
+  WinRateChart,
+  type WinRateDataPoint,
+} from "@/components/charts/win-rate-chart";
 import { getPaperPortfolioStats } from "@/lib/simulation/paper-trader";
 
 export const dynamic = "force-dynamic";
@@ -10,10 +16,9 @@ export const revalidate = 60;
 export default async function PerformancePage() {
   const stats = await getPaperPortfolioStats();
 
-  // Get all resolved trades for per-wallet breakdown
+  // Get all trades for per-wallet breakdown
   const allTrades = await db.select().from(paperTrades).limit(500);
   const resolved = allTrades.filter((t) => t.status === "resolved");
-  const wins = resolved.filter((t) => (t.realizedPnl ?? 0) > 0);
 
   // Per-wallet aggregation
   const walletMap = new Map<
@@ -34,6 +39,51 @@ export default async function PerformancePage() {
   const walletBreakdown = [...walletMap.entries()]
     .sort((a, b) => b[1].pnl - a[1].pnl)
     .slice(0, 10);
+
+  // ── PnL chart data: cumulative PnL over time from snapshots ──
+  const snapshots = await db
+    .select({
+      pnl: pnlSnapshots.pnl,
+      collectedAt: pnlSnapshots.collectedAt,
+    })
+    .from(pnlSnapshots)
+    .orderBy(asc(pnlSnapshots.collectedAt))
+    .limit(500);
+
+  const pnlByDay = new Map<string, number>();
+  for (const s of snapshots) {
+    const day = s.collectedAt instanceof Date
+      ? s.collectedAt.toISOString().slice(0, 10)
+      : new Date((s.collectedAt as unknown as number) * 1000).toISOString().slice(0, 10);
+    pnlByDay.set(day, (pnlByDay.get(day) ?? 0) + (s.pnl ?? 0));
+  }
+  let cumulative = 0;
+  const pnlData: PnlDataPoint[] = [];
+  for (const [day, dailyPnl] of [...pnlByDay.entries()].sort()) {
+    cumulative += dailyPnl;
+    const label = day.slice(5); // "MM-DD"
+    pnlData.push({ date: label, pnl: Math.round(cumulative * 100) / 100 });
+  }
+
+  // ── Win rate chart data: daily win rate from resolved trades ──
+  const resolvedByDay = new Map<string, { wins: number; total: number }>();
+  for (const t of resolved) {
+    if (!t.resolvedAt) continue;
+    const day = t.resolvedAt instanceof Date
+      ? t.resolvedAt.toISOString().slice(0, 10)
+      : new Date((t.resolvedAt as unknown as number) * 1000).toISOString().slice(0, 10);
+    const entry = resolvedByDay.get(day) ?? { wins: 0, total: 0 };
+    entry.total++;
+    if ((t.realizedPnl ?? 0) > 0) entry.wins++;
+    resolvedByDay.set(day, entry);
+  }
+  const winRateData: WinRateDataPoint[] = [...resolvedByDay.entries()]
+    .sort()
+    .map(([day, d]) => ({
+      date: day.slice(5),
+      winRate: d.total > 0 ? d.wins / d.total : 0,
+      total: d.total,
+    }));
 
   const totalPnl = stats.totalPnl;
   const winRate = stats.winRate;
@@ -86,6 +136,16 @@ export default async function PerformancePage() {
           <p className="stat-value text-blue-400">
             {stats.resolvedCount}
           </p>
+        </Card>
+      </div>
+
+      {/* Charts row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card title="Cumulative PnL" subtitle="Over time from PnL snapshots" icon="📈">
+          <PnlChart data={pnlData} />
+        </Card>
+        <Card title="Daily Win Rate" subtitle="From resolved paper trades" icon="🎯">
+          <WinRateChart data={winRateData} />
         </Card>
       </div>
 
