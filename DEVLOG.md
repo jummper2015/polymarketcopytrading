@@ -762,6 +762,7 @@ Creado `tests/scoring/trade-scoring.test.ts` con 85 tests unitarios, todos pasan
 | 2026-07-12 | Hito 4.2: update-pnl | Actualizador horario de PnL | N/A | ~120 |
 | 2026-07-12 | Hito 4.3: review-outcomes | Revisor de resultados + OutcomeReview | N/A | ~180 |
 | 2026-07-12 | Hito 5.1: Rule Engine | Motor de reglas versionadas + automejora | N/A | ~280 |
+| 2026-07-12 | Hito 5.2: update-rules | Script de auto-actualizacion de reglas | N/A | ~150 |
 
 ### [2026-07-12] — Hito 4.2: Script update-pnl
 
@@ -812,6 +813,7 @@ Implementado `scripts/update-pnl.ts` (~120 líneas). Actualiza el PnL simulado d
 | 2026-07-12 | Hito 4.2: update-pnl | Actualizador horario de PnL | N/A | ~120 |
 | 2026-07-12 | Hito 4.3: review-outcomes | Revisor de resultados + OutcomeReview | N/A | ~180 |
 | 2026-07-12 | Hito 5.1: Rule Engine | Motor de reglas versionadas + automejora | N/A | ~280 |
+| 2026-07-12 | Hito 5.2: update-rules | Script de auto-actualizacion de reglas | N/A | ~150 |
 
 > *Esta sección se poblará a medida que avance el desarrollo. Aquí van insights no obvios, errores costosos, y descubrimientos útiles.*
 
