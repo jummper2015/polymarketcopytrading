@@ -25,7 +25,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed top-14 left-0 bottom-0 w-56 border-r border-surface-700/50 bg-surface-900/50 overflow-y-auto">
+    <aside className="fixed top-14 left-0 bottom-0 w-56 border-r border-surface-700/50 bg-surface-900/50 overflow-y-auto hidden md:block">
       <nav className="flex flex-col gap-0.5 p-3 h-full">
         {/* Navigation header */}
         <div className="px-3 py-2 mb-2">
@@ -38,7 +38,7 @@ export function Sidebar() {
           const isActive =
             item.href === "/"
               ? pathname === "/"
-              : pathname.startsWith(item.href);
+              : pathname?.startsWith(item.href) ?? false;
 
           return (
             <Link

@@ -1,8 +1,9 @@
+import "./globals.css";
+
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Navbar } from "@/components/layout/navbar";
 import { Sidebar } from "@/components/layout/sidebar";
-import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,7 +38,7 @@ export default function RootLayout({
 
         <div className="flex pt-14">
           <Sidebar />
-          <main className="flex-1 ml-56 min-h-[calc(100vh-3.5rem)] p-6">
+          <main className="flex-1 ml-0 md:ml-56 min-h-[calc(100vh-3.5rem)] p-4 md:p-6">
             {children}
           </main>
         </div>

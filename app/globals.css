@@ -12,11 +12,6 @@
     --muted: 215 25% 27%;
     --muted-foreground: 215 20% 65%;
   }
-
-  body {
-    @apply bg-surface-950 text-surface-50 antialiased;
-    font-family: "Inter", system-ui, sans-serif;
-  }
 }
 
 @layer components {
