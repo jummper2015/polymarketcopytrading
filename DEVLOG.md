@@ -759,10 +759,55 @@ Creado `tests/scoring/trade-scoring.test.ts` con 85 tests unitarios, todos pasan
 | 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
 | 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
 | 2026-07-12 | Hito 4.1: Paper Trader | Motor de simulación completo | N/A | ~430 |
+| 2026-07-12 | Hito 4.2: update-pnl | Actualizador horario de PnL | N/A | ~120 |
+
+### [2026-07-12] — Hito 4.2: Script update-pnl
+
+**Rama:** `main`
+**Estado:** ✅ Completado
+
+**Resumen:**
+Implementado `scripts/update-pnl.ts` (~120 líneas). Actualiza el PnL simulado de paper trades abiertos consultando precios desde la API de Polymarket.
+
+**Flujo:**
+1. Obtiene paper trades open via `getOpenPaperTrades()`
+2. Para cada trade, `fetchMarketData(marketId)` → yesPrice/noPrice actuales
+3. Selecciona precio correcto según side (yes→yesPrice, no→noPrice)
+4. `updatePaperTradePnL(id, currentPrice)` → actualiza unrealized PnL + crea PnlSnapshot
+5. Display: PnL por trade con +/-$$ y resumen final con PnL total
+
+**Rate limiting:** 150ms delay entre llamadas.
+
+**Archivos modificados:**
+- `scripts/update-pnl.ts` — Implementación completa (~120 líneas)
+
+**Problemas encontrados:**
+- Dead imports del stub original (`db`, `paperTrades`, `eq`) → Eliminados
+
+**Próximos pasos:**
+- [ ] Hito 4.3: Script `review:outcomes`
+- [ ] Tests unitarios para paper-trader
 
 ---
 
-## Lecciones Aprendidas
+## Métricas de Desarrollo
+
+| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
+|-------|------|--------------------|---------------|------------------|
+| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
+| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
+| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
+| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
+| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
+| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
+| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
+| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
+| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
+| 2026-07-12 | Hito 3.4: Tests trade-scoring | 85 tests unitarios, todos pasando | 217/217 ✅ | ~640 |
+| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
+| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
+| 2026-07-12 | Hito 4.1: Paper Trader | Motor de simulación completo | N/A | ~430 |
+| 2026-07-12 | Hito 4.2: update-pnl | Actualizador horario de PnL | N/A | ~120 |
 
 > *Esta sección se poblará a medida que avance el desarrollo. Aquí van insights no obvios, errores costosos, y descubrimientos útiles.*
 
