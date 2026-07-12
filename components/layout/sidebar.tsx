@@ -14,6 +14,7 @@ const navItems: NavItem[] = [
   { label: "Rankings", href: "/rankings", icon: "🏆" },
   { label: "Signals", href: "/signals", icon: "🔔" },
   { label: "Paper Trades", href: "/paper-trades", icon: "📋" },
+  { label: "Backtesting", href: "/backtesting", icon: "🧪" },
   { label: "Journal", href: "/journal", icon: "📓" },
   { label: "Performance", href: "/performance", icon: "📈" },
   { label: "Rules", href: "/rules", icon: "🧠" },
