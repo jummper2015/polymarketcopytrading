@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { Navbar } from "@/components/layout/navbar";
+import { Sidebar } from "@/components/layout/sidebar";
 import "./globals.css";
 
 const inter = Inter({
@@ -26,9 +28,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
-      <body className="min-h-screen flex flex-col font-sans">
-        {children}
+    <html
+      lang="es"
+      className={`dark ${inter.variable} ${jetbrainsMono.variable}`}
+    >
+      <body className="min-h-screen font-sans bg-surface-950 text-surface-50 antialiased">
+        <Navbar />
+
+        <div className="flex pt-14">
+          <Sidebar />
+          <main className="flex-1 ml-56 min-h-[calc(100vh-3.5rem)] p-6">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
