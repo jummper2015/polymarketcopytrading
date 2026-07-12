@@ -576,7 +576,57 @@ Implementado `scripts/monitor-trades.ts` (~230 líneas). El script detecta nueva
 | 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI funcional + probado vs API real | N/A | ~180 |
 | 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB, typecheck OK | N/A | ~300 |
 | 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades, typecheck OK | N/A | ~380 |
-| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + market snapshots, typecheck OK | N/A | ~230 |
+### [2026-07-12] — Hito 3.3: Script score:trades
+
+**Rama:** `main`
+**Estado:** ✅ Completado
+
+**Resumen:**
+Implementado `scripts/score-trades.ts` (~190 líneas). El script califica `observed_trades` pendientes y crea `DecisionJournal` records con la decisión de copia.
+
+**Flujo:**
+1. **Query**: LEFT JOIN `observed_trades` con `decision_journals` para encontrar trades sin decisión (máx 200 por ejecución)
+2. **Load wallet**: Reconstruye `WalletScoreResult` desde `wallet_profile`, calculando `roiScore` via `scoreROI(w.roi30d)`
+3. **Load market**: Obtiene el `market_snapshot` más reciente para el mercado del trade
+4. **Score**: Construye `TradeScoreInput` y llama a `scoreTrade()` del engine
+5. **Save**: Inserta `DecisionJournal` con todos los scores, reasons, risks, y simulatedPositionSize
+6. **Summary**: Conteo paper_copy / watchlist / skip
+
+**Manejo de errores**: Si un trade no tiene wallet_profile o market_snapshot → skip. Si `scoreTrade()` lanza excepción → skip con log (no crashea el script).
+
+**Archivos creados:**
+- `scripts/score-trades.ts` — Implementación completa (~190 líneas)
+
+**Decisiones tomadas:**
+- **Reconstrucción de WalletScoreResult desde DB**: Los scores individuales (`roiScore`, `consistencyScore`, etc.) no están todos como columnas separadas. Solo `roiScore` se computa desde `roi30d` porque el trade-scoring lo necesita. Los demás se inicializan a 0 ya que no los usa `scoreTrade()`.
+- **Batch de 200 trades por ejecución**: Suficiente para una pasada de scoring sin sobrecargar.
+
+**Problemas encontrados:**
+- `roiScore` hardcodeado a 0 en la reconstrucción → Arreglado: import `scoreROI` y computar desde `w.roi30d`
+- Sin try/catch en el loop de scoring → Añadido per-trade try/catch para evitar que un trade malo crashee todo el script
+- Imports duplicados de wallet-scoring (type + value) → Unificados en una línea
+
+**Próximos pasos:**
+- [ ] Hito 4.1: Motor de paper trading (`lib/simulation/paper-trader.ts`)
+- [ ] Tests unitarios para trade-scoring
+
+---
+
+## Métricas de Desarrollo
+
+| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
+|-------|------|--------------------|---------------|------------------|
+| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
+| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
+| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
+| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
+| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
+| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
+| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
+| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
+| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
+| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
+| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
 
 ---
 
