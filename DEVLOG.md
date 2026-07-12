@@ -628,6 +628,76 @@ Implementado `scripts/score-trades.ts` (~190 líneas). El script califica `obser
 | 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
 | 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
 
+### [2026-07-12] — Hito 4.1: Motor de Paper Trading
+
+**Rama:** `main`
+**Estado:** ✅ Completado
+
+**Resumen:**
+Implementado `lib/simulation/paper-trader.ts` (~430 líneas). El motor crea y gestiona operaciones simuladas (paper trades) a partir de decisiones `paper_copy` del DecisionJournal.
+
+**Funciones principales:**
+
+| Función | Descripción |
+|---------|-------------|
+| `createPaperTrade(decisionJournalId)` | Crea PaperTrade desde DecisionJournal + ObservedTrade. Usa detectedPrice como entry, previene duplicados, solo procesa paper_copy |
+| `updatePaperTradePnL(id, currentPrice)` | Calcula PnL unrealized: `shares = positionSize/entryPrice`, `pnl = shares * (currentPrice - entryPrice)`. Crea PnlSnapshot histórico |
+| `updateBatchPnL(priceMap)` | Batch update para múltiples trades |
+| `closePaperTrade(id)` | Mueve unrealized→realized PnL, marca status=closed |
+| `resolvePaperTrade(id, winningOutcome, resolvedPrice)` | Determina win/loss: win = `shares*(resolvedPrice-entryPrice)`, loss = `-positionSize`. Solo procesa trades abiertos |
+| `processPendingDecisions(limit)` | Batch: LEFT JOIN encuentra decisiones paper_copy sin PaperTrade y las crea automáticamente |
+
+**Queries:**
+- `getOpenPaperTrades()` — Todos los trades abiertos
+- `getPaperTradesByWallet(address)` — Trades por wallet
+- `getPaperTradesByStatus(status)` — Trades por estado (open/closed/resolved)
+- `getPaperTradeSnapshot(id)` — Snapshot con PnL, PnL%, inProfit
+- `getPaperPortfolioStats()` — Estadísticas agregadas: open/closed/resolved count, PnL total, win rate, win/loss counts
+- `hasPaperTrade(decisionJournalId)` — Verificación de duplicados
+
+**Fórmula de PnL:**
+- Ambos lados (YES/NO) usan la misma fórmula: `shares * (currentPrice - entryPrice)`
+- `currentPrice` es el precio del token del lado tradeado (YES price para yes, NO price para no)
+- Resolución: win = `shares * (1 - entryPrice)`, loss = `-positionSize` (pérdida total)
+
+**Archivos modificados:**
+- `lib/simulation/paper-trader.ts` — Implementación completa (~430 líneas)
+
+**Decisiones tomadas:**
+- **PnL unificado para YES/NO**: La fórmula `shares * (currentPrice - entryPrice)` funciona para ambos lados mientras `currentPrice` sea el precio del token correcto
+- **Timestamp columns con `new Date()`**: Las columnas `mode: "timestamp"` de Drizzle requieren objetos Date, no Unix timestamps
+- **Guardia `pt.status !== "open"` en resolve**: Solo trades abiertos se resuelven. Trades ya cerrados o resueltos se devuelven sin modificar
+
+**Problemas encontrados:**
+- 11 errores de typecheck iniciales: timestamp columns esperaban Date (no number), null-safety en unrealizedPnl/realizedPnl con Drizzle `$inferSelect`
+- `closedAt`/`resolvedAt` usaban `Math.floor(Date.now()/1000)` → Corregido a `new Date()` para coincidir con `mode: "timestamp"`
+- `getPaperTradeSnapshot` y `getPaperPortfolioStats` tenían accesos possibly-null a PnL → Añadido `?? 0`
+- Imports muertos: `inArray` (drizzle-orm), `DecisionJournalRow` type → Eliminados
+
+**Próximos pasos:**
+- [ ] Hito 4.2: Script `paper:update-pnl` — Actualización horaria de PnL desde precios de mercado
+- [ ] Hito 4.3: Script `review:outcomes` — Revisión de resultados finales
+- [ ] Tests unitarios para paper-trader
+
+---
+
+## Métricas de Desarrollo
+
+| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
+|-------|------|--------------------|---------------|------------------|
+| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
+| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
+| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
+| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
+| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
+| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
+| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
+| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
+| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
+| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
+| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
+| 2026-07-12 | Hito 4.1: Paper Trader | Motor de simulación completo | N/A | ~430 |
+
 ---
 
 ## Lecciones Aprendidas
