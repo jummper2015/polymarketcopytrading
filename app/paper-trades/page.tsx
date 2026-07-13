@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/ui/status-dot";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 function statusBadge(status: string) {
   switch (status) {

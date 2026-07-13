@@ -4,7 +4,6 @@ import { desc } from "drizzle-orm";
 import { BacktestPage } from "./backtest-page";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 export default async function BacktestingRoute() {
   // Fetch known wallets for the dropdown

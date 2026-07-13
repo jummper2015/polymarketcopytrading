@@ -1,3 +1,11 @@
+// SAFETY: Enforce simulation-only mode in v1 (Hito 9.1 / SAFETY.md)
+if (process.env.SIMULATION_MODE && process.env.SIMULATION_MODE !== "paper_only") {
+  throw new Error(
+    "SAFETY: SIMULATION_MODE must be 'paper_only' in v1. " +
+    "Real execution is not available in this version."
+  );
+}
+
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import * as schema from "./schema";

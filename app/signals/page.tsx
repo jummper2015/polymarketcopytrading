@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { ScoreBar } from "@/components/ui/score-bar";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 function decisionBadge(decision: string, score: number | null) {
   if (decision === "paper_copy")

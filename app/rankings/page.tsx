@@ -6,7 +6,6 @@ import { ScoreBar } from "@/components/ui/score-bar";
 import { StatusDot } from "@/components/ui/status-dot";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 function fmtPct(v: number | null): string {
   return v != null ? `${(v * 100).toFixed(1)}%` : "—";

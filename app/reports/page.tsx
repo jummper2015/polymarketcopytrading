@@ -6,7 +6,6 @@ import {
 } from "@/lib/reports/daily-report";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
 
 function parseBestWallets(json: string | null) {
   if (!json) return [];

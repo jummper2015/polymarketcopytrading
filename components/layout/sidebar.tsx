@@ -38,7 +38,7 @@ export function Sidebar({ isMobileOpen, onNavClick }: SidebarProps) {
           ? "translate-x-0 pointer-events-auto"
           : "-translate-x-full pointer-events-none"
       }`}
-      inert={!isMobileOpen}
+      aria-hidden={!isMobileOpen ? true : undefined}
     >
       <nav className="flex flex-col gap-0.5 p-3 h-full">
         {/* Navigation header */}
