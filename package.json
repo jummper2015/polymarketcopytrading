@@ -5,7 +5,7 @@
   "description": "Polymarket Copy Trading Bot — Paper trading simulation with auto-improving rules and Vercel dashboard",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "unset NODE_ENV && next build",
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "drizzle-kit push",
