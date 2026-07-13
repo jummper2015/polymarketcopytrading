@@ -21,11 +21,25 @@ const navItems: NavItem[] = [
   { label: "Reports", href: "/reports", icon: "📄" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  /** Whether the sidebar is toggled open on mobile */
+  isMobileOpen: boolean;
+  /** Called when a nav link is clicked — closes sidebar on mobile */
+  onNavClick: () => void;
+}
+
+export function Sidebar({ isMobileOpen, onNavClick }: SidebarProps) {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed top-14 left-0 bottom-0 w-56 border-r border-surface-700/50 bg-surface-900/50 overflow-y-auto hidden md:block">
+    <aside
+      className={`fixed top-14 left-0 bottom-0 w-56 border-r border-surface-700/50 bg-surface-900/95 overflow-y-auto z-40 transition-transform duration-200 md:translate-x-0 md:block md:pointer-events-auto ${
+        isMobileOpen
+          ? "translate-x-0 pointer-events-auto"
+          : "-translate-x-full pointer-events-none"
+      }`}
+      inert={!isMobileOpen}
+    >
       <nav className="flex flex-col gap-0.5 p-3 h-full">
         {/* Navigation header */}
         <div className="px-3 py-2 mb-2">
@@ -44,6 +58,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavClick}
               className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150 group ${
                 isActive
                   ? "bg-brand-500/10 text-brand-400 border border-brand-500/20"

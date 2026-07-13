@@ -2,8 +2,7 @@ import "./globals.css";
 
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { Navbar } from "@/components/layout/navbar";
-import { Sidebar } from "@/components/layout/sidebar";
+import { Shell } from "@/components/layout/shell";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,14 +33,7 @@ export default function RootLayout({
       className={`dark ${inter.variable} ${jetbrainsMono.variable}`}
     >
       <body className="min-h-screen font-sans bg-surface-950 text-surface-50 antialiased">
-        <Navbar />
-
-        <div className="flex pt-14">
-          <Sidebar />
-          <main className="flex-1 ml-0 md:ml-56 min-h-[calc(100vh-3.5rem)] p-4 md:p-6">
-            {children}
-          </main>
-        </div>
+        <Shell>{children}</Shell>
       </body>
     </html>
   );
