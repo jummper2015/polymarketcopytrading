@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    /* Dark theme (default) */
     --background: 222 47% 11%;
     --foreground: 210 40% 96%;
     --card: 217 33% 17%;
@@ -11,38 +12,79 @@
     --border: 215 25% 27%;
     --muted: 215 25% 27%;
     --muted-foreground: 215 20% 65%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 146 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 210 40% 96%;
+    --accent: 215 25% 27%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 62% 52%;
+    --input: 215 25% 27%;
+    --ring: 146 100% 50%;
+    --chart-1: 146 100% 50%;
+    --chart-2: 184 100% 50%;
+    --chart-3: 227 100% 50%;
+    --chart-4: 84 100% 50%;
+    --chart-5: 70 100% 50%;
+    --sidebar: 217 33% 17%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 146 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 27%;
+    --sidebar-accent-foreground: 210 40% 96%;
+    --sidebar-border: 215 25% 27%;
+    --sidebar-ring: 146 100% 50%;
+    --radius: 0.625rem;
+  }
+
+  /* Light mode overrides */
+  :root:not(.dark) {
+    --background: 0 0% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --border: 216 12% 84%;
+    --muted: 210 20% 92%;
+    --muted-foreground: 215 16% 47%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 146 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 92%;
+    --secondary-foreground: 222 47% 11%;
+    --accent: 210 20% 92%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 72% 51%;
+    --input: 216 12% 84%;
+    --ring: 146 100% 50%;
+    --chart-1: 146 100% 50%;
+    --chart-2: 184 100% 50%;
+    --chart-3: 227 100% 50%;
+    --chart-4: 84 100% 50%;
+    --chart-5: 70 100% 50%;
+    --sidebar: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 146 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 92%;
+    --sidebar-accent-foreground: 222 47% 11%;
+    --sidebar-border: 216 12% 84%;
+    --sidebar-ring: 146 100% 50%;
+  }
+
+  body {
+    @apply bg-surface-950 text-surface-50;
+  }
+
+  /* Light mode body override */
+  :root:not(.dark) body {
+    @apply bg-surface-50 text-surface-900;
   }
 }
 
 @layer components {
-  .card {
-    @apply bg-surface-800/80 border border-surface-700/50 rounded-xl p-6 backdrop-blur-sm;
-  }
-
-  .card-sm {
-    @apply bg-surface-800/80 border border-surface-700/50 rounded-lg p-4 backdrop-blur-sm;
-  }
-
-  .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-
-  .badge-success {
-    @apply badge bg-brand-500/15 text-brand-400 border border-brand-500/25;
-  }
-
-  .badge-warning {
-    @apply badge bg-amber-500/15 text-amber-400 border border-amber-500/25;
-  }
-
-  .badge-danger {
-    @apply badge bg-red-500/15 text-red-400 border border-red-500/25;
-  }
-
-  .badge-neutral {
-    @apply badge bg-surface-600/50 text-surface-300 border border-surface-600/50;
-  }
-
   .stat-value {
     @apply text-2xl font-bold tabular-nums tracking-tight;
   }
@@ -59,20 +101,39 @@
     @apply px-4 py-3 text-sm border-b border-surface-700/30;
   }
 
-  .btn {
-    @apply inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-150;
+  .page-header {
+    @apply mb-6;
   }
 
-  .btn-primary {
-    @apply btn bg-brand-600 hover:bg-brand-500 text-white;
+  .page-header h2 {
+    @apply text-2xl font-bold tracking-tight text-surface-50;
   }
 
-  .btn-ghost {
-    @apply btn bg-transparent hover:bg-surface-700/50 text-surface-300;
+  .page-header p {
+    @apply text-sm text-surface-400 mt-1;
+  }
+}
+
+/* Light mode overrides for utility classes */
+:root:not(.dark) {
+  .stat-label {
+    @apply text-surface-500;
   }
 
-  .input {
-    @apply bg-surface-800 border border-surface-700 rounded-lg px-3 py-2 text-sm text-surface-50 placeholder:text-surface-500 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500;
+  .table-header {
+    @apply text-surface-500;
+  }
+
+  .table-cell {
+    @apply border-surface-200/70;
+  }
+
+  .page-header h2 {
+    @apply text-surface-900;
+  }
+
+  .page-header p {
+    @apply text-surface-500;
   }
 }
 
@@ -87,10 +148,18 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(215 25% 27%);
+  background: hsl(var(--border));
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(215 25% 35%);
+}
+
+:root:not(.dark) ::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+}
+
+:root:not(.dark) ::-webkit-scrollbar-thumb:hover {
+  background: hsl(215 16% 47%);
 }

@@ -3,4 +3,5 @@ const nextConfig = {
   serverExternalPackages: ["better-sqlite3"],
 };
 
-module.exports = nextConfig;
+const withNextIntl = require("next-intl/plugin")();
+module.exports = withNextIntl(nextConfig);

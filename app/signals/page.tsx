@@ -1,28 +1,30 @@
 import { db } from "@/db";
 import { decisionJournals, observedTrades } from "@/db/schema";
 import { desc, inArray } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
+import { Bell, ClipboardList, Eye, SkipForward } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScoreBar } from "@/components/ui/score-bar";
 
 export const dynamic = "force-dynamic";
 
-function decisionBadge(decision: string, score: number | null) {
+function decisionBadge(decision: string, score: number | null, t: (key: string) => string) {
   if (decision === "paper_copy")
     return (
-      <Badge variant="success" icon="📋">
-        copy {(score ?? 0).toFixed(2)}
+      <Badge variant="success" icon={<ClipboardList className="size-3" />}>
+        {t("copy")} {(score ?? 0).toFixed(2)}
       </Badge>
     );
   if (decision === "watchlist")
     return (
-      <Badge variant="warning" icon="👁️">
-        watch {(score ?? 0).toFixed(2)}
+      <Badge variant="warning" icon={<Eye className="size-3" />}>
+        {t("watch")} {(score ?? 0).toFixed(2)}
       </Badge>
     );
   return (
-    <Badge variant="danger" icon="⏭️">
-      skip {(score ?? 0).toFixed(2)}
+    <Badge variant="danger" icon={<SkipForward className="size-3" />}>
+      {t("skip")} {(score ?? 0).toFixed(2)}
     </Badge>
   );
 }
@@ -59,15 +61,16 @@ export default async function SignalsPage() {
     }
   }
 
+  const t = await getTranslations("signals");
+
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-surface-50">
-          Trade Signals
+      <div className="page-header">
+        <h2 className="flex items-center gap-2">
+          <Bell className="size-6 text-amber-400" />
+          {t("title")}
         </h2>
-        <p className="text-sm text-surface-400 mt-1">
-          Últimas decisiones de copia generadas por el motor de scoring.
-        </p>
+        <p>{t("description")}</p>
       </div>
 
       <Card compact className="overflow-x-auto">
@@ -121,7 +124,7 @@ export default async function SignalsPage() {
                       </p>
                     </td>
                     <td className="table-cell text-center">
-                      {decisionBadge(dj.decision, dj.copyScore)}
+                      {decisionBadge(dj.decision, dj.copyScore, t)}
                     </td>
                     <td className="table-cell text-right">
                       <span className="font-mono font-semibold text-surface-100">

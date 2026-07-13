@@ -1,6 +1,15 @@
 import { db } from "@/db";
 import { paperTrades, pnlSnapshots } from "@/db/schema";
 import { desc, asc } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
+import {
+  TrendingUp,
+  Target,
+  BarChart3,
+  DollarSign,
+  Activity,
+  CheckCircle2,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScoreBar } from "@/components/ui/score-bar";
 import { PnlChart, type PnlDataPoint } from "@/components/charts/pnl-chart";
@@ -10,26 +19,18 @@ import {
 } from "@/components/charts/win-rate-chart";
 import { getPaperPortfolioStats } from "@/lib/simulation/paper-trader";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 export default async function PerformancePage() {
+  const t = await getTranslations("performance");
   const stats = await getPaperPortfolioStats();
 
-  // Get all trades for per-wallet breakdown
   const allTrades = await db.select().from(paperTrades).limit(500);
   const resolved = allTrades.filter((t) => t.status === "resolved");
 
-  // Per-wallet aggregation
-  const walletMap = new Map<
-    string,
-    { trades: number; wins: number; pnl: number }
-  >();
+  const walletMap = new Map<string, { trades: number; wins: number; pnl: number }>();
   for (const t of resolved) {
-    const entry = walletMap.get(t.walletAddress) ?? {
-      trades: 0,
-      wins: 0,
-      pnl: 0,
-    };
+    const entry = walletMap.get(t.walletAddress) ?? { trades: 0, wins: 0, pnl: 0 };
     entry.trades++;
     entry.pnl += t.realizedPnl ?? 0;
     if ((t.realizedPnl ?? 0) > 0) entry.wins++;
@@ -39,12 +40,8 @@ export default async function PerformancePage() {
     .sort((a, b) => b[1].pnl - a[1].pnl)
     .slice(0, 10);
 
-  // ── PnL chart data: cumulative PnL over time from snapshots ──
   const snapshots = await db
-    .select({
-      pnl: pnlSnapshots.pnl,
-      collectedAt: pnlSnapshots.collectedAt,
-    })
+    .select({ pnl: pnlSnapshots.pnl, collectedAt: pnlSnapshots.collectedAt })
     .from(pnlSnapshots)
     .orderBy(asc(pnlSnapshots.collectedAt))
     .limit(500);
@@ -60,11 +57,9 @@ export default async function PerformancePage() {
   const pnlData: PnlDataPoint[] = [];
   for (const [day, dailyPnl] of [...pnlByDay.entries()].sort()) {
     cumulative += dailyPnl;
-    const label = day.slice(5); // "MM-DD"
-    pnlData.push({ date: label, pnl: Math.round(cumulative * 100) / 100 });
+    pnlData.push({ date: day.slice(5), pnl: Math.round(cumulative * 100) / 100 });
   }
 
-  // ── Win rate chart data: daily win rate from resolved trades ──
   const resolvedByDay = new Map<string, { wins: number; total: number }>();
   for (const t of resolved) {
     if (!t.resolvedAt) continue;
@@ -78,11 +73,7 @@ export default async function PerformancePage() {
   }
   const winRateData: WinRateDataPoint[] = [...resolvedByDay.entries()]
     .sort()
-    .map(([day, d]) => ({
-      date: day.slice(5),
-      winRate: d.total > 0 ? d.wins / d.total : 0,
-      total: d.total,
-    }));
+    .map(([day, d]) => ({ date: day.slice(5), winRate: d.total > 0 ? d.wins / d.total : 0, total: d.total }));
 
   const totalPnl = stats.totalPnl;
   const winRate = stats.winRate;
@@ -90,168 +81,83 @@ export default async function PerformancePage() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-surface-50">
-          Performance
+      <div className="page-header">
+        <h2 className="flex items-center gap-2">
+          <TrendingUp className="size-6 text-brand-400" />
+          {t("title")}
         </h2>
-        <p className="text-sm text-surface-400 mt-1">
-          Rendimiento del portafolio simulado.
-        </p>
+        <p>{t("description")}</p>
       </div>
 
-      {/* Key metrics */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">
-            Total PnL
-          </p>
-          <p
-            className={`stat-value ${
-              totalPnl >= 0 ? "text-brand-400" : "text-red-400"
-            }`}
-          >
-            {totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}
-          </p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider flex items-center gap-1"><DollarSign className="size-3" /> {t("totalPnl")}</p>
+          <p className={`stat-value ${totalPnl >= 0 ? "text-brand-400" : "text-red-400"}`}>{totalPnl >= 0 ? "+" : ""}${totalPnl.toFixed(2)}</p>
         </Card>
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">
-            Win Rate
-          </p>
-          <p className="stat-value text-surface-50">
-            {(winRate * 100).toFixed(1)}%
-          </p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider flex items-center gap-1"><Target className="size-3" /> {t("winRate")}</p>
+          <p className="stat-value text-surface-50">{(winRate * 100).toFixed(1)}%</p>
           <ScoreBar value={winRate} size="sm" className="mt-2" />
         </Card>
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">
-            Total Trades
-          </p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider flex items-center gap-1"><BarChart3 className="size-3" /> {t("totalTrades")}</p>
           <p className="stat-value text-surface-50">{totalTrades}</p>
         </Card>
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">
-            Resolved
-          </p>
-          <p className="stat-value text-blue-400">
-            {stats.resolvedCount}
-          </p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider flex items-center gap-1"><CheckCircle2 className="size-3" /> {t("resolved")}</p>
+          <p className="stat-value text-blue-400">{stats.resolvedCount}</p>
         </Card>
       </div>
 
-      {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card title="Cumulative PnL" subtitle="Over time from PnL snapshots" icon="📈">
+        <Card title={t("cumulativePnl")} subtitle={t("cumulativePnlDesc")} icon={<TrendingUp className="size-5 text-brand-400" />}>
           <PnlChart data={pnlData} />
         </Card>
-        <Card title="Daily Win Rate" subtitle="From resolved paper trades" icon="🎯">
+        <Card title={t("dailyWinRate")} subtitle={t("dailyWinRateDesc")} icon={<Target className="size-5 text-brand-400" />}>
           <WinRateChart data={winRateData} />
         </Card>
       </div>
 
-      {/* Status breakdown */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">
-            Open
-          </p>
-          <p className="stat-value text-brand-400 mt-1">
-            {stats.openCount}
-          </p>
-          <p className="text-xs text-surface-500 mt-1">
-            PnL: ${stats.totalUnrealizedPnl.toFixed(2)}
-          </p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider flex items-center gap-1"><Activity className="size-3" /> {t("open")}</p>
+          <p className="stat-value text-brand-400 mt-1">{stats.openCount}</p>
+          <p className="text-xs text-surface-500 mt-1">PnL: ${stats.totalUnrealizedPnl.toFixed(2)}</p>
         </Card>
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">
-            Wins / Losses
-          </p>
-          <p className="stat-value text-surface-50 mt-1">
-            {stats.winCount}{" "}
-            <span className="text-lg text-surface-500">/</span>{" "}
-            {stats.lossCount}
-          </p>
-          <p className="text-xs text-surface-500 mt-1">
-            {stats.resolvedCount > 0
-              ? `${(
-                  (stats.winCount / stats.resolvedCount) *
-                  100
-                ).toFixed(0)}% win rate`
-              : "No resolved trades"}
-          </p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider flex items-center gap-1"><Target className="size-3" /> {t("winsLosses")}</p>
+          <p className="stat-value text-surface-50 mt-1">{stats.winCount} <span className="text-lg text-surface-500">/</span> {stats.lossCount}</p>
+          <p className="text-xs text-surface-500 mt-1">{stats.resolvedCount > 0 ? `${((stats.winCount / stats.resolvedCount) * 100).toFixed(0)}% win rate` : t("noResolved")}</p>
         </Card>
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">
-            Realized PnL
-          </p>
-          <p
-            className={`stat-value mt-1 ${
-              stats.totalRealizedPnl >= 0
-                ? "text-brand-400"
-                : "text-red-400"
-            }`}
-          >
-            {stats.totalRealizedPnl >= 0 ? "+" : ""}$
-            {stats.totalRealizedPnl.toFixed(2)}
-          </p>
-          <p className="text-xs text-surface-500 mt-1">
-            from {stats.resolvedCount} resolved
-          </p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider flex items-center gap-1"><DollarSign className="size-3" /> {t("realizedPnl")}</p>
+          <p className={`stat-value mt-1 ${stats.totalRealizedPnl >= 0 ? "text-brand-400" : "text-red-400"}`}>{stats.totalRealizedPnl >= 0 ? "+" : ""}${stats.totalRealizedPnl.toFixed(2)}</p>
+          <p className="text-xs text-surface-500 mt-1">{t("fromResolved", { count: stats.resolvedCount })}</p>
         </Card>
       </div>
 
-      {/* Per-wallet performance */}
-      <Card title="Wallet Performance" subtitle="Top 10 wallets by realized PnL">
+      <Card title={t("walletPerformance")} subtitle={t("walletPerformanceDesc")} icon={<BarChart3 className="size-5 text-blue-400" />}>
         {walletBreakdown.length === 0 ? (
-          <p className="text-sm text-surface-500 py-4">
-            No resolved trades yet — performance data will appear as markets
-            resolve.
-          </p>
+          <p className="text-sm text-surface-500 py-4">{t("noData")}</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-700/50">
-                <th className="table-header">#</th>
-                <th className="table-header">Wallet</th>
-                <th className="table-header text-right">Trades</th>
-                <th className="table-header text-right">Win Rate</th>
-                <th className="table-header text-right">PnL</th>
+                <th className="table-header">{t("rank")}</th>
+                <th className="table-header">{t("wallet")}</th>
+                <th className="table-header text-right">{t("trades")}</th>
+                <th className="table-header text-right">{t("winRateShort")}</th>
+                <th className="table-header text-right">{t("pnl")}</th>
               </tr>
             </thead>
             <tbody>
               {walletBreakdown.map(([addr, data], i) => (
-                <tr
-                  key={addr}
-                  className="border-b border-surface-700/20"
-                >
-                  <td className="table-cell text-surface-500 font-mono text-xs">
-                    {i + 1}
-                  </td>
-                  <td className="table-cell">
-                    <p className="font-mono text-[11px] text-surface-500">
-                      {addr.slice(0, 6)}...{addr.slice(-4)}
-                    </p>
-                  </td>
-                  <td className="table-cell text-right font-mono text-surface-300">
-                    {data.trades}
-                  </td>
-                  <td className="table-cell text-right">
-                    <span className="font-mono text-surface-300">
-                      {data.trades > 0
-                        ? `${((data.wins / data.trades) * 100).toFixed(0)}%`
-                        : "—"}
-                    </span>
-                  </td>
-                  <td className="table-cell text-right">
-                    <span
-                      className={`font-mono font-semibold tabular-nums ${
-                        data.pnl >= 0
-                          ? "text-brand-400"
-                          : "text-red-400"
-                      }`}
-                    >
-                      {data.pnl >= 0 ? "+" : ""}${data.pnl.toFixed(2)}
-                    </span>
-                  </td>
+                <tr key={addr} className="border-b border-surface-700/20">
+                  <td className="table-cell text-surface-500 font-mono text-xs">{i + 1}</td>
+                  <td className="table-cell"><p className="font-mono text-[11px] text-surface-500">{addr.slice(0, 6)}...{addr.slice(-4)}</p></td>
+                  <td className="table-cell text-right font-mono text-surface-300">{data.trades}</td>
+                  <td className="table-cell text-right"><span className="font-mono text-surface-300">{data.trades > 0 ? `${((data.wins / data.trades) * 100).toFixed(0)}%` : "—"}</span></td>
+                  <td className="table-cell text-right"><span className={`font-mono font-semibold tabular-nums ${data.pnl >= 0 ? "text-brand-400" : "text-red-400"}`}>{data.pnl >= 0 ? "+" : ""}${data.pnl.toFixed(2)}</span></td>
                 </tr>
               ))}
             </tbody>

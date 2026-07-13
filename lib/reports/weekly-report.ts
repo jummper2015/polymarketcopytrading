@@ -293,7 +293,7 @@ export function formatWeeklyReportForTelegram(
   }
 
   lines.push("");
-  lines.push("_🤖 Hermes Weekly Report_");
+  lines.push("_🤖 MESIRVE Weekly Report_");
 
   return lines.join("\n");
 }

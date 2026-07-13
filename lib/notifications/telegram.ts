@@ -229,7 +229,7 @@ export async function sendAlert(
   // Footer
   const now = new Date().toISOString().slice(0, 19).replace("T", " ");
   lines.push("");
-  lines.push(`_🤖 Hermes Alert \\| ${now}_`);
+  lines.push(`_🤖 MESIRVE Alert \\| ${now}_`);
 
   const text = lines.join("\n");
 
@@ -252,7 +252,7 @@ export async function sendRuleChangeAlert(
 ): Promise<TelegramResult> {
   return sendAlert({
     title: "Rules Updated",
-    message: `Hermes has auto\\-updated the trading rules based on recent performance evidence\\.`,
+    message: `MESIRVE has auto\\-updated the trading rules based on recent performance evidence\\.`,
     severity: "info",
     metadata: {
       From: fromVersion,
@@ -338,7 +338,7 @@ export async function testTelegramConnection(): Promise<TelegramResult> {
     return { ok: false, error: "Telegram not configured" };
   }
 
-  return sendMessage("✅ *Hermes Bot* is online and connected\\.", {
+  return sendMessage("✅ *MESIRVE Bot* is online and connected\\.", {
     parseMode: "MarkdownV2",
     disableNotification: true,
   });

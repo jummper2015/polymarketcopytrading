@@ -1,8 +1,10 @@
 import "./globals.css";
 
 import type { Metadata } from "next";
-
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
+
 import { Shell } from "@/components/layout/shell";
 
 const inter = Inter({
@@ -18,23 +20,46 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hermes — Polymarket Copy Trading Bot",
+  title: "MESIRVE — Bot de Copy Trading Polymarket",
   description:
     "Panel de control del bot de copy trading para Polymarket. Simulación (paper trading) únicamente.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const messages = await getMessages();
+
   return (
     <html
       lang="es"
-      className={`dark ${inter.variable} ${jetbrainsMono.variable}`}
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
+      suppressHydrationWarning
     >
-      <body className="min-h-screen font-sans bg-surface-950 text-surface-50 antialiased">
-        <Shell>{children}</Shell>
+      <head>
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('theme');
+                  var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (theme === 'dark' || (!theme && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className="min-h-screen font-sans antialiased">
+        <NextIntlClientProvider locale="es" messages={messages}>
+          <Shell>{children}</Shell>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -15,7 +15,7 @@ async function main() {
   const startTime = Date.now();
 
   console.log("═".repeat(60));
-  console.log("  📊 Hermes — Daily Report Generator");
+  console.log("  📊 MESIRVE — Daily Report Generator");
   console.log("═".repeat(60));
 
   // ── Phase 1: Generate report ─────────────────────────────

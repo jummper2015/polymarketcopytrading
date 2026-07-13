@@ -21,7 +21,7 @@ async function main() {
   const startTime = Date.now();
 
   console.log("═".repeat(60));
-  console.log("  🎯 Hermes — Trade Scorer");
+  console.log("  🎯 MESIRVE — Trade Scorer");
   console.log("═".repeat(60));
 
   // Phase 1: Get unscored trades

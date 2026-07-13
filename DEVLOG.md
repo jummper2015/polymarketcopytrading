@@ -9,7 +9,6 @@
 ```markdown
 ### [YYYY-MM-DD] — Título del Hito o Tarea
 
-**Rama:** `feature/xxx`
 **Estado:** ✅ Completado | 🚧 En progreso | ❌ Bloqueado | ⏳ Pendiente
 
 **Resumen:**
@@ -20,14 +19,12 @@ Qué se hizo, qué funcionó, qué no.
 
 **Decisiones tomadas:**
 - Decisión 1 y por qué
-- Decisión 2 y por qué
 
 **Problemas encontrados:**
 - Problema → Solución aplicada
 
 **Próximos pasos:**
 - [ ] Paso 1
-- [ ] Paso 2
 ```
 
 ---
@@ -36,861 +33,345 @@ Qué se hizo, qué funcionó, qué no.
 
 ### [2026-07-12] — Inicio del Proyecto: Planificación
 
-**Rama:** `main`
 **Estado:** ✅ Completado
 
 **Resumen:**
-Creación de los documentos fundacionales del proyecto:
-- `PLAN.md` — Plan maestro con arquitectura, modelos de datos, motores de scoring, fases y principios de seguridad.
-- `ROADMAP.md` — Ruta de implementación detallada con 9 hitos y orden secuencial.
-- `DEVLOG.md` — Este diario de desarrollo (archivo actual).
-
-El proyecto parte de un repositorio vacío con solo un `README.md` inicial. Se definió el stack: TypeScript, Next.js, React, Tailwind, SQLite, Drizzle ORM, APIs públicas de Polymarket, Vercel.
+Creación de los documentos fundacionales del proyecto: PLAN.md, ROADMAP.md, DEVLOG.md. Stack definido: TypeScript, Next.js, React, Tailwind, SQLite, Drizzle ORM, APIs públicas de Polymarket, Vercel.
 
 **Archivos creados:**
-- `PLAN.md`
-- `ROADMAP.md`
-- `DEVLOG.md`
-
-**Decisiones tomadas:**
-- **Drizzle sobre Prisma:** Drizzle es más ligero para SQLite, mejor tipado inferido, y no requiere un paso de generación de cliente. Mejor ajuste para un proyecto que prioriza simplicidad.
-- **SQLite local para v1:** Sin necesidad de servicios externos de pago. La DB viaja con el repositorio o se genera localmente. Suficiente para paper trading.
-- **Estructura de 9 hitos secuenciales:** Cada hito construye sobre el anterior. Los adaptadores primero porque todo depende de datos reales de Polymarket.
-- **Vitest sobre Jest:** Mejor integración con TypeScript/ESM, más rápido, misma API.
-
-**Problemas encontrados:**
-- Ninguno aún — fase de planificación.
-
-**Próximos pasos:**
-- [ ] Ejecutar Hito 0.1: Inicializar proyecto Next.js + TypeScript + Tailwind
-- [ ] Ejecutar Hito 0.2: Instalar dependencias base
-- [x] Ejecutar Hito 0.3: Configurar base de datos con Drizzle
+- `PLAN.md`, `ROADMAP.md`, `DEVLOG.md`
 
 ### [2026-07-12] — Hito 0: Fundación del Proyecto
 
-**Rama:** `main`
 **Estado:** ✅ Completado
 
 **Resumen:**
-Proyecto Next.js inicializado manualmente en el directorio raiz. Configurado:
-- TypeScript estricto + Tailwind CSS + PostCSS + Autoprefixer
-- Drizzle ORM con SQLite (better-sqlite3, WAL mode, foreign keys)
-- Esquema de 11 tablas con todas las relaciones
-- Vitest para testing, tsx para scripts CLI, Recharts para graficos
-- Tema oscuro personalizado (brand green + surface grays)
-- Sistema de badges CSS (success/warning/danger/neutral)
-
-Build de Next.js y typecheck (tsc --noEmit) pasan sin errores.
-Migraciones Drizzle generadas y aplicadas (11 tablas en hermes.db).
+Proyecto Next.js inicializado manualmente. TypeScript estricto + Tailwind CSS + Drizzle ORM con SQLite. Esquema de 11 tablas. Vitest, Recharts. Tema oscuro personalizado (brand green + surface grays). Build y typecheck pasan.
 
 **Archivos creados/modificados:**
-- `package.json` — Dependencias y 15 scripts CLI+web
-- `tsconfig.json` — Strict mode, path alias `@`
-- `next.config.js` — serverExternalPackages para SQLite
-- `tailwind.config.ts` — Tema oscuro, animaciones, colores brand/surface
-- `postcss.config.js` — Tailwind + Autoprefixer
-- `drizzle.config.ts` — SQLite dialect
-- `vitest.config.ts` — Alias `@`, globals
-- `.env.example` + `.env.local` — Variables documentadas
-- `.gitignore` — Ignorar node_modules, .next, data/
-- `db/schema.ts` — 11 modelos Drizzle completos
-- `db/index.ts` — Cliente SQLite + WAL + FK
-- `db/migrations/0000_omniscient_purple_man.sql` — Migración inicial
-- `app/layout.tsx` — Root layout dark theme
-- `app/globals.css` — Tailwind + componentes custom (card, badge, btn, input, table)
-- `app/page.tsx` — Placeholder dashboard con 3 stat cards
-- `lib/adapters/leaderboard.ts` — Placeholder
-- `lib/scoring/wallet-scoring.ts` — Placeholder
-- `lib/simulation/paper-trader.ts` — Placeholder
-- `lib/rules/rule-engine.ts` — Placeholder
-- `lib/reports/daily-report.ts` — Placeholder
-- `lib/backtesting/engine.ts` — Placeholder
-
-**Decisiones tomadas:**
-- **Inicializacion manual sobre create-next-app**: El directorio ya contiene docs de planificacion. Crear el proyecto manualmente evita conflictos y da control total.
-- **WAL mode en SQLite**: Mejor rendimiento concurrente para lecturas del dashboard mientras scripts escriben.
-- **serverExternalPackages en next.config**: Necesario porque better-sqlite3 es un modulo nativo incompatible con el bundler de Next.js.
-- **Tema 100% oscuro por defecto**: El dashboard es para Max HQ, que asumimos usa tema oscuro.
+- `package.json`, `tsconfig.json`, `next.config.js`, `tailwind.config.ts`, `postcss.config.js`
+- `drizzle.config.ts`, `vitest.config.ts`, `.env.example`, `.gitignore`
+- `db/schema.ts` (11 modelos), `db/index.ts`, `db/migrations/`
+- `app/layout.tsx`, `app/globals.css`, `app/page.tsx`
+- `lib/` stubs varios
 
 **Problemas encontrados:**
-- `drizzle-kit push` fallaba porque `data/` no existia → crear directorio antes del push
+- `drizzle-kit push` fallaba porque `data/` no existía → crear directorio antes del push
 - Next.js build fallaba por `autoprefixer` no instalado → `npm install -D autoprefixer`
-- `experimental.serverComponentsExternalPackages` obsoleto en Next 15 → migrar a `serverExternalPackages`
-
-**Proximos pasos:**
-- [ ] Hito 1: Crear adaptadores de Polymarket (leaderboard, markets, trades, outcomes)
-- [ ] Hito 1: Tests unitarios para adaptadores
 
 ### [2026-07-12] — Correcciones post code-review
 
-**Rama:** `main`
 **Estado:** ✅ Completado
 
 **Resumen:**
-Fixes aplicados tras revision:
-1. Eliminado `webpack.externals` redundante → solo `serverExternalPackages`
-2. Inter + JetBrains Mono via `next/font/google` en layout.tsx
-3. Creado `SAFETY.md` con riesgos, mitigaciones y plan futuro
-4. `README.md` actualizado con doc completa
-5. 10 stubs en `scripts/` — comandos CLI ya no fallan
-6. Parsing de `DATABASE_URL` mejorado (`startsWith("file:")`)
-7. `engines.node >= 20` en package.json
-
-**Archivos modificados/creados:**
-- `next.config.js`, `app/layout.tsx`, `db/index.ts`, `package.json`
-- `SAFETY.md`, `README.md`, `scripts/*.ts` (10 stubs)
+Fixes aplicados tras revisión: serverExternalPackages, Inter + JetBrains Mono fonts, SAFETY.md, README.md, 10 stubs de scripts CLI, parsing de DATABASE_URL, engines.node >= 20.
 
 ### [2026-07-12] — Hito 1: Adaptadores de Polymarket
 
-**Rama:** `main`
 **Estado:** ✅ Completado
 
 **Resumen:**
-Implementados los 4 adaptadores completos para interactuar con las APIs públicas de Polymarket:
+4 adaptadores completos: leaderboard, markets, trades, outcomes. Cliente HTTP compartido con retry + rate limiting. Builder tipado para fetchMarketData. Tests: 66 tests unitarios con mocks.
 
-1. **`lib/adapters/client.ts`** — Cliente HTTP compartido con:
-   - Retry automático con backoff exponencial (hasta 3 intentos)
-   - Manejo de rate limiting (429) con espera configurable
-   - Timeout por request (15s default)
-   - Helpers compartidos: `parseOutcomePrices`, `mapSide`, `sleep`
+**Corrección posterior:** Adaptador leaderboard actualizado para usar `proxyWallet` (address), `userName` (label), `vol` (volume) de la Polymarket Data API.
 
-2. **`lib/adapters/leaderboard.ts`** — Data API:
-   - `fetchLeaderboard(limit)` — Paginación automática para obtener top wallets (50/pág, delay 200ms entre páginas)
-   - `fetchWalletActivity(address)` — Actividad reciente de una wallet
-   - `fetchWalletPositions(address)` — Posiciones abiertas actuales
-   - `fetchWalletActivitySummary(address, days)` — Resumen agregado con ROI, win rate, trade count
+**Archivos creados:**
+- `lib/adapters/client.ts`, `lib/adapters/leaderboard.ts`, `lib/adapters/markets.ts`
+- `lib/adapters/trades.ts`, `lib/adapters/outcomes.ts`
+- `tests/adapters/leaderboard.test.ts`, `tests/adapters/markets.test.ts`
+- `tests/adapters/trades.test.ts`, `tests/adapters/outcomes.test.ts`
 
-3. **`lib/adapters/markets.ts`** — Gamma + CLOB APIs:
-   - `fetchMarketData(id)` — Datos completos de mercado (precios, liquidity, volume)
-   - `fetchMarketByToken(tokenId)` — Búsqueda inversa token → market
-   - `fetchOrderBook(tokenId)` — Order book con bestBid/bestAsk/spread
-   - `fetchCurrentPrice(tokenId)` / `fetchPriceHistory(tokenId)` — Precios CLOB
-   - `fetchMarketOutcome(id)` — Resultado de mercado resuelto
-   - `fetchMarketsByCondition(conditionId)` — Mercados relacionados
-   - `fetchResolvedMarkets()` / `fetchActiveMarkets()` — Descubrimiento
+### [2026-07-12] — Hito 2: Scanner y Perfilador
 
-4. **`lib/adapters/trades.ts`** — Data API:
-   - `fetchRecentTrades(wallet)` — Últimas operaciones
-   - `fetchTradeHistory(wallet, days)` — Historial completo con deduplicación cross-endpoint
-   - `fetchTradeAggregateStats(wallet, days)` — Stats agregados (volumen, categorías, buy ratio)
+**Estado:** ✅ Completado
 
-5. **`lib/adapters/outcomes.ts`** — Gamma API:
-   - `fetchMarketResolution(id)` — Resolución de mercado individual
-   - `fetchResolvedMarketsBatch(opts)` — Batch paginado de mercados resueltos
-   - `checkResolutions(ids)` — Verifica resolución para batch de IDs (en lotes de 10)
-   - `fetchRecentlyResolved(hours)` — Mercados resueltos en últimas N horas
-   - `verifyPrediction(outcome, side, resolution)` — Valida predicción vs resultado real
+**Resumen:**
+- Motor de scoring de wallets: 8 componentes + penalización one-hit-wonder + 132 tests
+- `scan:leaderboard` — Escanea top 500, stats, guarda snapshot
+- `scan:wallets` — Perfila en batches con upsert, calcula scores
+- Tests: 132 tests unitarios
+
+**Mejora posterior:** `scan:wallets` ahora soporta `--limit` y `--skip-recent` para escaneo selectivo.
+
+### [2026-07-12] — Hito 3: Monitoreo de Operaciones
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+- Motor de scoring de trades: 8 componentes + confidence multiplier + 85 tests
+- `monitor:trades` — Detecta nuevas operaciones + market snapshots
+- `score:trades` — Califica operaciones → DecisionJournal
+
+### [2026-07-12] — Hito 4: Motor de Simulación
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+- Paper trader: create/update/close/resolve + batch processing (430 líneas)
+- `update-pnl` — Actualización horaria de PnL desde precios reales
+- `review:outcomes` — Revisión de resultados con OutcomeReview
+- Benchmarks: bot vs copia ciega, winners/losers tracking
+
+### [2026-07-12] — Hito 5: Automejora
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+- Rule engine: versionado, propuesta de cambios, aplicación automática
+- `update:rules` — Auto-actualización basada en evidencia
+- Tests: rule-versioning + auto-update
+
+### [2026-07-12] — Hito 6: Reportes y Alertas
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+- Daily report generator con métricas de portafolio + wallets + reglas
+- Weekly report generator
+- Telegram integration: sendMessage, sendDailyReport, sendAlert, sendOnlineStatus
+- `report:daily` — Orquesta generación + envío
+
+**Fix posterior:** `between()` corregido para usar objetos Date en vez de Unix timestamps.
+
+### [2026-07-12] — Hito 7: Panel de Control (Dashboard)
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+Layout base con sidebar + navbar + 9 páginas funcionando. Componentes compartidos (Badge, ScoreBar, StatusDot, Card). Gráficos Recharts (PnLChart, WinRateChart). Página dinámica de perfil de wallet.
+
+**Cambios de rendimiento:** Todas las páginas migraron de `force-dynamic` a `revalidate = 60` para ISR.
+
+### [2026-07-12] — Hito 8: Backtesting
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+Motor de backtesting con CLI (`--wallet`, `--days`, `--compare`) y UI en dashboard (selector de wallet, período, gráfico PnL, tabla de trades, modo comparativa).
+
+### [2026-07-12] — Hito 9: Pruebas, Seguridad y Despliegue
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+- Tests de seguridad (readonly, no-real-execution, redaction): 3 archivos
+- Tests de integración (full pipeline): scan → score → simulate → report
+- Seed script con datos demo
+- Vercel config + despliegue
+- **Total: 343 tests, 15 archivos, 0 fallos**
+
+---
+
+### [2026-07-13] — Fase 10: UI Polish — Tema Claro/Oscuro
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+Implementado ThemeToggle con persistencia en localStorage, prevención de FOUC (flash of unstyled content) via inline script en `<head>`. Estilos light mode en `globals.css`. Iconos Sun/Moon de Lucide.
 
 **Archivos creados/modificados:**
-- `lib/adapters/client.ts` — Nuevo (fetch wrapper + helpers compartidos)
-- `lib/adapters/leaderboard.ts` — Implementación completa (~220 líneas)
-- `lib/adapters/markets.ts` — Nuevo (~260 líneas)
-- `lib/adapters/trades.ts` — Nuevo (~220 líneas)
-- `lib/adapters/outcomes.ts` — Nuevo (~250 líneas)
-- `.env.example` — Añadido `POLYMARKET_DATA_URL`
+- `components/theme-toggle.tsx` — Nuevo componente
+- `app/layout.tsx` — Inline script para FOUC prevention + ThemeToggle en navbar
+- `app/globals.css` — Light mode overrides
 
 **Decisiones tomadas:**
-- **Fetch nativo de Node 20+**: Sin dependencias externas (no axios, no node-fetch). Suficiente para APIs REST públicas.
-- **Tres APIs distintas**: Data API (leaderboard + actividad), Gamma API (mercados), CLOB API (order books/precios). Cada adaptador usa la que corresponde.
-- **Helpers compartidos en client.ts**: `parseOutcomePrices` y `mapSide` estaban duplicados → extraídos a shared para consistencia.
-- **Paginación con delay**: 200ms entre páginas del leaderboard para evitar rate limiting (Cloudflare).
-- **Promise.allSettled en trade history**: Si un endpoint falla, el otro aún aporta datos. Mejor resiliencia.
-
-**Problemas encontrados:**
-- Typecheck inicial falló por inconsistencia de tipos en `fetchLeaderboard` (generic vs Record) → Corregido usando `Record<string, unknown>[]` como tipo de retorno de `apiFetch`
-- `parseOutcomePrices` duplicado en markets.ts y outcomes.ts → Extraído a client.ts
-- `mapSide` duplicado con lógica inconsistente en leaderboard.ts y trades.ts → Unificado en client.ts
-- `fetchActiveMarkets` tenía bug: tag + category usaban la misma key → Corregido
-- `fetchMarketResolution` usaba dynamic import innecesario → Reemplazado por static import de `fetchMarketOutcome`
-
-**Próximos pasos:**
-- [ ] Hito 2.1: Motor de scoring de billeteras (`lib/scoring/wallet-scoring.ts`)
-- [ ] Hito 2.2: Script scan:leaderboard
-- [ ] Hito 2.3: Script scan:wallets
-- [ ] Tests unitarios para adaptadores
-
-### [2026-07-12] — Hito 2.1: Motor de Scoring de Billeteras
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Implementado el motor completo de scoring de billeteras en `lib/scoring/wallet-scoring.ts` (~350 líneas).
-
-**Funciones implementadas:**
-
-| Función | Input | Output | Lógica |
-|---------|-------|--------|--------|
-| `scoreROI(roi)` | ROI numérico | 0–1 | Normalización logarítmica: ln(1+roi)/ln(6) — ROI negativo = 0, 100% ≈ 0.80 |
-| `scoreConsistency(wr, tc, trades?)` | Win rate, trade count, trades | 0–1 | 50% win rate, 30% suficiencia de trades, 20% dispersión temporal (≥3 días distintos) |
-| `scoreCopyability(wallet)` | WalletInput | 0–1 | 40% trade size ($50-$2000 ideal), 30% frecuencia (5-100 trades), 30% spread+liquidez |
-| `scoreCategoryStrength(dist)` | Distribución categorías | 0–1 | Concentración ideal 40-70% en categoría top: muestra expertise sin ser unidimensional |
-| `scoreLiquidityQuality(liq)` | Liquidez promedio | 0–1 | Escala logarítmica: $100K+ ≈ 1.0, $1K ≈ 0.3 |
-| `scoreEntryTiming(hours)` | Horas hasta resolución | 0–1 | 48h+ = 1.0, 24h = 0.9, 2h = 0.4, <1h = 0.1 |
-| `scoreResolvedPerformance(count, wr)` | # resueltos + win rate | 0–1 | 70% win rate, 30% volumen de resueltas (≥20 = 0.3 extra) |
-| `calculateOneHitWonderPenalty(trades, positions?)` | Trades + posiciones | 0–0.4 | Tier: >60% ganancia de 1 trade → 0.40, >40% → 0.20, >25% → 0.10 |
-
-**Funciones compuestas:**
-- `calculateAllScores(wallet)` → `WalletScores` con los 8 componentes
-- `calculateGlobalScore(scores)` → score ponderado final (fórmula PLAN.md exacta)
-- `scoreWallet(wallet)` → resultado completo con status, scores, reasoning
-- `scoreWallets(wallets[])` → batch scoring ordenado por globalScore descendente
-- `determineStatus(score)` → track (>0.7) | watch (≥0.4) | ignore (<0.4)
-
-**Archivos modificados:**
-- `lib/scoring/wallet-scoring.ts` — Implementación completa (~350 líneas)
-
-**Decisiones tomadas:**
-- **Normalización logarítmica para ROI**: Evita que wallets con ROI extremo (1000%+) dominen el score. La curva ln(1+x)/ln(6) da ~0.80 para 100% ROI y se aplana asintóticamente.
-- **One-hit-wonder usa PnL de posiciones resueltas primero**: Más preciso que valor nocional. Si no hay datos de PnL, fallback a valor nocional con advertencia documentada.
-- **`WalletInput` como tipo flexible**: Acepta datos tanto crudos (leaderboard) como agregados (activity summary), permitiendo que el scoring funcione con distintos niveles de detalle.
-- **`scoreEntryTiming` recibe horas**: Documentado explícitamente que el caller debe convertir de segundos a horas.
-
-**Problemas encontrados:**
-- Variable `reasons` no usada en `scoreCopyability` → Eliminada
-- `t.timestamp` usaba truthy check (0 = epoch, false) → Cambiado a `t.timestamp > 0`
-- `scoreCategoryStrength` aceptaba `bestCategory` sin usarlo → Parámetro eliminado
-- Doble clamping en `scoreWallet` → Eliminado (solo en `calculateGlobalScore`)
-
-**Próximos pasos:**
-- [ ] Hito 2.2: Script `scan:leaderboard` — Escanea top 500 y guarda en DB
-- [ ] Hito 2.3: Script `scan:wallets` — Perfila cada wallet con el scoring engine
-- [ ] Tests unitarios para wallet-scoring
-
-### [2026-07-12] — Tests unitarios para adaptadores (Hito 1.5)
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Creados 4 archivos de tests unitarios con 66 tests en total, todos pasando. Cada test usa `vi.stubGlobal('fetch')` para mockear las llamadas HTTP sin depender de la API real.
-
-**Tests por adaptador:**
-
-| Archivo | Tests | Cobertura |
-|---------|-------|-----------|
-| `tests/adapters/leaderboard.test.ts` | 14 | Paginación, field mapping, activity, positions, summary, time filtering, errores |
-| `tests/adapters/markets.test.ts` | 17 | Market data, token lookup, order book, prices, outcomes, filters, snake_case |
-| `tests/adapters/trades.test.ts` | 12 | Recent trades, history (dedup, time filter, graceful failure), aggregate stats |
-| `tests/adapters/outcomes.test.ts` | 23 | Resolution, batch, checkResolutions, recently resolved, verifyPrediction |
-
-**Patrón de mocking:**
-- `vi.stubGlobal('fetch', mockFetch)` + `mockFetch.mockResolvedValueOnce(mockFetchResponse(data))`
-- `mockFetchResponse()` crea un `Response`-like con `.ok`, `.status`, `.json()`
-- `vi.mock("@/lib/adapters/client", ...)` mockea `sleep` para tests de error/retry (evita timeouts)
-
-**Problemas encontrados:**
-- 3 tests con timeout por el retry loop de `apiFetch` (3 reintentos × backoff exponencial) → Mockeado `sleep` via `vi.mock` para que resuelva instantáneamente
-- Test `treats closed markets as resolved` fallaba porque `resolved: false` no es nullish → Ajustado: se prueba el fallback cuando `resolved` está ausente
-- Test `detects side mismatch` esperaba `correct: true` pero `verifyPrediction` correctamente retorna `false` para side mismatch → Corregida la aserción
-
-**Archivos creados:**
-- `tests/adapters/leaderboard.test.ts` — 14 tests
-- `tests/adapters/markets.test.ts` — 17 tests
-- `tests/adapters/trades.test.ts` — 12 tests
-- `tests/adapters/outcomes.test.ts` — 23 tests
+- **localStorage > prefers-color-scheme**: localStorage tiene prioridad. Si no hay stored, usa preferencia del SO.
+- **FOUC prevention con script inline**: Se ejecuta antes del render para evitar flash de tema incorrecto.
+- **size-8 placeholder durante SSR**: Evita layout shift mientras el componente monta.
 
 ---
 
-## Métricas de Desarrollo
+### [2026-07-13] — Fase 10: UI Polish — Tooltips en Sidebar
 
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-### [2026-07-12] — Hito 2.2: Script scan:leaderboard
-
-**Rama:** `main`
 **Estado:** ✅ Completado
 
 **Resumen:**
-Implementado `scripts/scan-leaderboard.ts` (~180 líneas). El script:
-
-1. **Fetch**: Llama a `fetchLeaderboard(500)` con timePeriod ALL + category OVERALL
-2. **Stats**: Calcula avg/median ROI, avg PnL, total volume, avg win rate, avg trade count
-3. **DB**: Inserta un `LeaderboardScan` con `rawSummaryJson` (top 10 por PnL + stats completos)
-4. **Display**: Muestra tabla formateada en consola con el top 10 por PnL
-
-**Salida de consola:**
-```
-════════════════════════════════════════════════════════════
-  🔍 Hermes — Polymarket Leaderboard Scanner
-════════════════════════════════════════════════════════════
-  Limit:       500 wallets
-  Lookback:    30 days
-  Category:    OVERALL
-  Time period: ALL
-────────────────────────────────────────────────────────────
-  📡 Fetching leaderboard from Polymarket Data API...
-  ✅ Fetched 500 wallets in 12.3s
-  💾 Saving LeaderboardScan to database...
-  ✅ Scan saved.
-════════════════════════════════════════════════════════════
-  📊 Scan Summary
-════════════════════════════════════════════════════════════
-  Wallets fetched:      500
-  Avg PnL:              $15.3K
-  Avg ROI:              45.2%
-  ...
-────────────────────────────────────────────────────────────
-  🏆 Top 10 Wallets by PnL
-────────────────────────────────────────────────────────────
-  Rank  Address         PnL      ROI    Win%   Label
-  1     0x1234...abcd   $50.0K   120%   68%    Alpha
-  ...
-```
-
-**Archivos modificados:**
-- `scripts/scan-leaderboard.ts` — Implementación completa (~180 líneas)
-
-**Decisiones tomadas:**
-- **Time period ALL vs lookback 30d**: La API usa `ALL` (all-time ranking), el análisis 30d por wallet se hace en `scan:wallets` (Hito 2.3). Documentado con comentario.
-- **Top 10 por PnL consistente**: Tanto `rawSummaryJson` como la tabla de consola usan el mismo top 10 sorted by PnL (no por rank).
-- **Formato de moneda con signo**: `-$1.5K` en vez de `$-1.5K` para valores negativos.
-
-**Problemas encontrados:**
-- `buildSummaryJson` guardaba top 10 por rank pero display mostraba top 10 por PnL → Unificado a top por PnL
-- Redundancia `e.pnl ?? 0` tras filtrar `!== undefined` → Reemplazado por non-null assertion `e.pnl!`
-- Formato de moneda negativa mostraba `$-1.5K` → Corregido a `-$1.5K`
-
-**Próximos pasos:**
-- [ ] Hito 2.3: Script `scan:wallets` — Perfila cada wallet con el scoring engine
-- [ ] Tests unitarios para wallet-scoring
-
----
-
-## Métricas de Desarrollo
-
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring completo, typecheck OK | N/A | ~350 |
-### [2026-07-12] — Hito 2.3: Script scan:wallets
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Implementado `scripts/scan-wallets.ts` (~300 líneas). El script:
-
-1. **Lee el último scan**: Obtiene el `LeaderboardScan` más reciente de la DB y extrae las addresses desde `rawSummaryJson` (con fallback a re-fetch del leaderboard si no hay datos)
-2. **Perfila en batches**: Procesa wallets en lotes de 5 con 500ms de delay entre lotes para rate limiting
-3. **Obtiene actividad**: Para cada wallet llama a `fetchWalletActivitySummary(address, 30)` (2 API calls: actividad + posiciones)
-4. **Calcula scores**: Usa `scoreWallet()` del motor de scoring con datos combinados de leaderboard + actividad
-5. **Upsert en DB**: Inserta o actualiza `wallet_profile` con todos los scores y métricas 30d
-6. **Muestra resumen**: Conteo track/watch/ignore, top wallets, penalizaciones one-hit-wonder
-
-**Corrección crítica en scan-leaderboard.ts**: `buildSummaryJson` ahora recibe `allAddresses: string[]` (las 500 wallets) además del `topByPnl` (top 10). Antes solo guardaba 10 addresses.
-
-**Datos persistidos en wallet_profile:**
-- Scores: `globalScore`, `consistencyScore`, `copyabilityScore`, `oneHitWonderPenalty`
-- Métricas 30d: `roi30d`, `tradeCount30d`, `winRate30d`, `resolvedTradeCount30d`, `averageTradeSize`
-- Categoría: `bestCategory`, `categoryStrengthsJson`
-- Notas: `copyabilityNotes` (filtrado a razones de copyability), `riskNotes` (penalizaciones)
+Componente Tooltip ligero (CSS puro, sin dependencias) con posicionamiento a la derecha (ideal para sidebar), delay de 250ms, flecha decorativa CSS, y soporte para focus/blur (accesibilidad por teclado). Todos los items del sidebar tienen descripciones en español.
 
 **Archivos creados/modificados:**
-- `scripts/scan-wallets.ts` — Implementación completa (~300 líneas)
-- `scripts/scan-leaderboard.ts` — Fix: `buildSummaryJson` ahora guarda todas las addresses
+- `components/ui/tooltip.tsx` — Nuevo componente
+- `components/layout/sidebar.tsx` — Tooltips envueltos en cada nav item
 
 **Decisiones tomadas:**
-- **ProfileResult** (score + summary): El resultado del perfilado incluye tanto el score como el summary para que el upsert pueda persistir métricas 30d reales, no solo datos del leaderboard all-time
-- **Batches de 5 + 500ms delay**: Compromiso entre velocidad y rate limiting. Con 500 wallets, ~50s de delays + tiempo de API
-- **Fallback resiliente**: Si `fetchWalletActivitySummary` falla para una wallet, se scorea solo con datos del leaderboard
-
-**Problemas encontrados:**
-- **Bug crítico**: `addresses` en rawSummaryJson solo guardaba 10 wallets (topByPnl) → Corregido pasando `entries.map(e => e.address)` como `allAddresses`
-- `winRate30d` usaba datos all-time del leaderboard → Ahora prefiere `summary.winRate` (30d)
-- `categoryStrengthsJson` siempre era `null` → Ahora serializa `buildCategoryDistribution()`
-- `tradeCount30d`/`resolvedTradeCount30d` hardcodeados a 0 → Ahora usan `summary.tradeCount`/`summary.resolvedTradeCount`
-- `buildCopyabilityNotes` retornaba `null` con tipo `string` → Corregido a `string | null`
-- Tipos verbosos `Awaited<ReturnType<...>>` → Reemplazados por `WalletActivitySummary` importado
-
-**Próximos pasos:**
-- [ ] Hito 3: Motor de scoring de operaciones (`lib/scoring/trade-scoring.ts`)
-- [ ] Tests unitarios para wallet-scoring.ts
-- [ ] Probar el pipeline completo: `scan:leaderboard` → `scan:wallets`
+- **CSS puro sobre librerías**: Evita añadir dependencias (no @radix-ui/tooltip, no @floating-ui). Suficiente para sidebar estático.
+- **Delay 250ms**: Suficiente para evitar tooltips accidentales al pasar el mouse rápidamente, pero sin sentirse lento.
+- **`pointer-events-none`**: Previene que el tooltip interfiera con clicks.
 
 ---
 
-### [2026-07-12] — Tests unitarios para wallet-scoring (Hito 2.4)
+### [2026-07-13] — Fase 10: UI Polish — Iconos Lucide en Todo el Dashboard
 
-**Rama:** `main`
 **Estado:** ✅ Completado
 
 **Resumen:**
-Creado `tests/scoring/wallet-scoring.test.ts` con 132 tests unitarios, todos pasando. Sin mocks necesarios — todas las funciones de scoring son puras.
-
-**Cobertura por función:**
-
-| Función | Tests | Casos clave |
-|---------|-------|-------------|
-| `scoreROI` | 6 | null/undefined, negativo/cero, 100% ROI (~0.387), 500% ROI (~1.0), monotonicidad, clamping |
-| `scoreConsistency` | 9 | < 3 trades, win rate solo, count bonuses (5/10/20), dispersión 3+ días, 2 días, sin detalles, full score combo |
-| `scoreCopyability` | 8 | sin datos, size ideal ($50-$2000), borderline, extremos, frecuencia, spread+liquidity full/parcial |
-| `scoreCategoryStrength` | 7 | null/empty, ideal (40-70%), decente (30-80%), sobre-concentración (>80%), zero total, boundary cases |
-| `scoreLiquidityQuality` | 5 | null/zero, negativo, monotonicidad, valores altos |
-| `scoreEntryTiming` | 4 | null (0.5 neutral), 48h+ (1.0), thresholds tiered |
-| `scoreResolvedPerformance` | 4 | cero resueltas, winRate 0-0.7, count tiers (3/5/10/20), max score |
-| `calculateOneHitWonderPenalty` | 9 | <3 positions, balanced gains, thresholds 25%/40%/60%, PnL negativo ignorado, fallback trades (balanced, dominance, non-trade filtering) |
-| `calculateGlobalScore` | 5 | todos 1s = 1.0, peso ROI 0.25, resta penalty, clamping a 0, cálculo exacto |
-| `calculateAllScores` | 2 | los 8 componentes + rangos, fallback a activity summary |
-| `scoreWallet` | 4 | resultado completo, status track/watch/ignore, reasoning con penalty |
-| `scoreWallets` | 2 | sorting descendente, entrada vacía |
-| `determineStatus` | 3 | track (>0.7), watch (≥0.4), ignore (<0.4) |
-
-**Archivos creados:**
-- `tests/scoring/wallet-scoring.test.ts` — 132 tests (~400 líneas)
-
-**Problemas encontrados:**
-- Test "balanced gains" esperaba 0 pero `ratio=0.4` activa `>0.25` → 0.1. Corregido: se añadió un test con ganancias verdaderamente iguales (25/25/25/25, ratio=0.25)
-- `scoreConsistency(0, 5)` esperaba 0.1 pero el código da 0.2 (0.1 count + 0.1 modest bonus). Corregida la expectativa
-- `scoreCategoryStrength({Politics: 3, Crypto: 7})` → concentración 0.7 está en rango ideal [0.4-0.7] → 0.9, no 0.7. Ajustado a distribución con concentración 0.727
-
----
-
-### [2026-07-12] — Hito 3.1: Motor de Scoring de Operaciones
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Implementado `lib/scoring/trade-scoring.ts` (~380 líneas). El motor califica operaciones individuales para decidir si copiarlas (paper_copy), observarlas (watchlist) o saltarlas (skip).
-
-**Fórmula (PLAN.md exacta):**
-```
-copyScore = (
-  walletQualityScore   * 0.25 +
-  categoryFitScore     * 0.15 +
-  entryTimingScore     * 0.15 +
-  spreadScore          * 0.10 +
-  liquidityScore       * 0.10 +
-  roiScore             * 0.10 +
-  thesisScore          * 0.10 +
-  timeToResolutionScore * 0.05
-) * confidence
-```
-
-**Funciones de scoring individual:**
-
-| Función | Lógica |
-|---------|--------|
-| `scoreWalletQuality` | Tiers: globalScore ≥0.8→1.0, ≥0.6→0.8, ≥0.4→0.5, ≥0.2→0.3 |
-| `scoreCategoryFit` | Exact match bestCategory=marketCategory→1.0, mismatch→0.4, unknown→0.5 |
-| `scoreEntryTimingTrade` | Price drift %: ≤1%→1.0, 1-3%→0.8, 3-5%→0.6, 5-10%→0.3, >10%→0.1 |
-| `scoreSpread` | Relative spread (vs mid-price): ≤1%→1.0, 1-3%→0.8, 3-5%→0.6, 5-8%→0.3 |
-| `scoreLiquidityTrade` | Log scale: $100K+→1.0, $50K→~0.75, $10K→~0.45 |
-| `scoreROITrade` | Passthrough del wallet.scores.roiScore |
-| `scoreThesis` | 50% size conviction ($500+→0.5), 25% directional, 25% price timing |
-| `scoreTimeToResolution` | 72h+→1.0, 48h→0.9, 24h→0.75, 12h→0.6, 6h→0.4, 2h→0.2 |
-
-**Funciones compuestas:**
-- `calculateTradeScores(input)` → `TradeScores` con 8 componentes
-- `calculateConfidence(input)` → 0.5 base + hasta 0.5 por datos disponibles
-- `calculateCopyScore(scores, confidence)` → `weightedSum * confidence`
-- `determineDecision(copyScore)` → paper_copy (>0.65), watchlist (0.35-0.65), skip (<0.35)
-- `calculatePositionSize(copyScore, decision)` → $5-$20 linear para copy, $3 watchlist, $0 skip
-- `scoreTrade(input)` → resultado completo con reasons, risks, position size
-- `scoreTrades(inputs[])` → batch scoring ordenado por copyScore descendente
-
-**Archivos creados:**
-- `lib/scoring/trade-scoring.ts` — Implementación completa (~380 líneas)
-
-**Decisiones tomadas:**
-- **Confidence multiplier**: Empieza en 0.5 base + gana hasta 0.5 por datos conocidos. Un trade sin datos se califica al 50% del score ponderado (conservador).
-- **Relative spread**: En vez de spread absoluto, se usa `spread / midPrice` cuando hay precio disponible. Más preciso en distintos rangos de precio.
-- **Thesis sin sesgo direccional**: Originalmente "no" recibía 0.3 vs 0.2 para "yes" → corregido a 0.25 igual para ambos lados.
-
-**Problemas encontrados:**
-- Imports muertos `MarketData` y `WalletScores` → Eliminados
-- Sesgo arbitrario en `scoreThesis` favoreciendo "no" → Igualado a 0.25 para ambos
-- `scoreSpread` usaba valores absolutos sin contexto de precio → Añadido `midPrice` para calcular spread relativo
-
-**Próximos pasos:**
-- [ ] Hito 3.2: Script `monitor:trades` — Detecta nuevas operaciones y las guarda en observed_trade
-- [ ] Hito 3.3: Script `score:trades` — Califica operaciones con el trade scoring engine
-- [ ] Tests unitarios para trade-scoring
-
----
-
-## Métricas de Desarrollo
-
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
-| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
-| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI funcional, typecheck OK | N/A | ~180 |
-| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB, typecheck OK | N/A | ~300 |
-### [2026-07-12] — Hito 3.2: Script monitor:trades
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Implementado `scripts/monitor-trades.ts` (~230 líneas). El script detecta nuevas operaciones de wallets con status "track" y las guarda en la DB.
-
-**Flujo:**
-1. **Query**: Obtiene wallets con status `track` de `wallet_profile`, ordenadas por globalScore desc
-2. **Scan**: Para cada wallet, llama a `fetchWalletActivity(address, {limit: 50})` y filtra trades de las últimas 24h
-3. **Dedup**: Verifica si el trade ya existe en `observed_trade` por `wallet + marketId + timestamp ± 120s` (fallback LIKE txHash)
-4. **Save trade**: Inserta nuevo `observed_trade` con entry price, detected price, size, side, etc.
-5. **Snapshot**: Para cada trade nuevo, obtiene `fetchMarketData(marketId)` y guarda `market_snapshot` (con dedup 1h)
-
-**Rate limiting**: 300ms delay entre wallets, 50 actividades por wallet.
-
-**Archivos creados:**
-- `scripts/monitor-trades.ts` — Implementación completa (~230 líneas)
-
-**Decisiones tomadas:**
-- **Two-phase pricing**: `detectedPrice` se inicializa = `walletEntryPrice`. El script `score:trades` (Hito 3.3) obtendrá precios frescos y actualizará `detectedPrice`.
-- **Dedup por wallet+marketId+timestamp**: Más robusto que comparar JSON. El fallback LIKE txHash solo se usa cuando no hay marketId.
-- **Market snapshot con cache 1h**: No se re-fetchea market data si ya existe un snapshot < 1h para ese mercado.
-
-**Problemas encontrados:**
-- Dedup txHash usaba `json_object()` de SQLite que es frágil comparando contra `JSON.stringify()` → Reemplazado por LIKE para el fallback, y wallet+marketId+timestamp como primary
-
-**Próximos pasos:**
-- [ ] Hito 3.3: Script `score:trades` — Califica observed_trades sin decisión con trade-scoring.ts
-- [ ] Hito 4: Motor de simulación (paper-trader.ts)
-
----
-
-## Métricas de Desarrollo
-
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
-| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
-| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI funcional + probado vs API real | N/A | ~180 |
-| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB, typecheck OK | N/A | ~300 |
-| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades, typecheck OK | N/A | ~380 |
-### [2026-07-12] — Hito 3.3: Script score:trades
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Implementado `scripts/score-trades.ts` (~190 líneas). El script califica `observed_trades` pendientes y crea `DecisionJournal` records con la decisión de copia.
-
-**Flujo:**
-1. **Query**: LEFT JOIN `observed_trades` con `decision_journals` para encontrar trades sin decisión (máx 200 por ejecución)
-2. **Load wallet**: Reconstruye `WalletScoreResult` desde `wallet_profile`, calculando `roiScore` via `scoreROI(w.roi30d)`
-3. **Load market**: Obtiene el `market_snapshot` más reciente para el mercado del trade
-4. **Score**: Construye `TradeScoreInput` y llama a `scoreTrade()` del engine
-5. **Save**: Inserta `DecisionJournal` con todos los scores, reasons, risks, y simulatedPositionSize
-6. **Summary**: Conteo paper_copy / watchlist / skip
-
-**Manejo de errores**: Si un trade no tiene wallet_profile o market_snapshot → skip. Si `scoreTrade()` lanza excepción → skip con log (no crashea el script).
-
-**Archivos creados:**
-- `scripts/score-trades.ts` — Implementación completa (~190 líneas)
-
-**Decisiones tomadas:**
-- **Reconstrucción de WalletScoreResult desde DB**: Los scores individuales (`roiScore`, `consistencyScore`, etc.) no están todos como columnas separadas. Solo `roiScore` se computa desde `roi30d` porque el trade-scoring lo necesita. Los demás se inicializan a 0 ya que no los usa `scoreTrade()`.
-- **Batch de 200 trades por ejecución**: Suficiente para una pasada de scoring sin sobrecargar.
-
-**Problemas encontrados:**
-- `roiScore` hardcodeado a 0 en la reconstrucción → Arreglado: import `scoreROI` y computar desde `w.roi30d`
-- Sin try/catch en el loop de scoring → Añadido per-trade try/catch para evitar que un trade malo crashee todo el script
-- Imports duplicados de wallet-scoring (type + value) → Unificados en una línea
-
-**Próximos pasos:**
-- [ ] Hito 4.1: Motor de paper trading (`lib/simulation/paper-trader.ts`)
-- [ ] Tests unitarios para trade-scoring
-
----
-
-## Métricas de Desarrollo
-
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
-| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
-| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
-| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
-| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
-| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
-| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
-
-### [2026-07-12] — Hito 4.1: Motor de Paper Trading
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Implementado `lib/simulation/paper-trader.ts` (~430 líneas). El motor crea y gestiona operaciones simuladas (paper trades) a partir de decisiones `paper_copy` del DecisionJournal.
-
-**Funciones principales:**
-
-| Función | Descripción |
-|---------|-------------|
-| `createPaperTrade(decisionJournalId)` | Crea PaperTrade desde DecisionJournal + ObservedTrade. Usa detectedPrice como entry, previene duplicados, solo procesa paper_copy |
-| `updatePaperTradePnL(id, currentPrice)` | Calcula PnL unrealized: `shares = positionSize/entryPrice`, `pnl = shares * (currentPrice - entryPrice)`. Crea PnlSnapshot histórico |
-| `updateBatchPnL(priceMap)` | Batch update para múltiples trades |
-| `closePaperTrade(id)` | Mueve unrealized→realized PnL, marca status=closed |
-| `resolvePaperTrade(id, winningOutcome, resolvedPrice)` | Determina win/loss: win = `shares*(resolvedPrice-entryPrice)`, loss = `-positionSize`. Solo procesa trades abiertos |
-| `processPendingDecisions(limit)` | Batch: LEFT JOIN encuentra decisiones paper_copy sin PaperTrade y las crea automáticamente |
-
-**Queries:**
-- `getOpenPaperTrades()` — Todos los trades abiertos
-- `getPaperTradesByWallet(address)` — Trades por wallet
-- `getPaperTradesByStatus(status)` — Trades por estado (open/closed/resolved)
-- `getPaperTradeSnapshot(id)` — Snapshot con PnL, PnL%, inProfit
-- `getPaperPortfolioStats()` — Estadísticas agregadas: open/closed/resolved count, PnL total, win rate, win/loss counts
-- `hasPaperTrade(decisionJournalId)` — Verificación de duplicados
-
-**Fórmula de PnL:**
-- Ambos lados (YES/NO) usan la misma fórmula: `shares * (currentPrice - entryPrice)`
-- `currentPrice` es el precio del token del lado tradeado (YES price para yes, NO price para no)
-- Resolución: win = `shares * (1 - entryPrice)`, loss = `-positionSize` (pérdida total)
+Reemplazados todos los emojis e iconos inline por componentes Lucide React en las 9 páginas, sidebar, navbar, badges, cards y componentes. Consistencia visual total.
 
 **Archivos modificados:**
-- `lib/simulation/paper-trader.ts` — Implementación completa (~430 líneas)
-
-**Decisiones tomadas:**
-- **PnL unificado para YES/NO**: La fórmula `shares * (currentPrice - entryPrice)` funciona para ambos lados mientras `currentPrice` sea el precio del token correcto
-- **Timestamp columns con `new Date()`**: Las columnas `mode: "timestamp"` de Drizzle requieren objetos Date, no Unix timestamps
-- **Guardia `pt.status !== "open"` en resolve**: Solo trades abiertos se resuelven. Trades ya cerrados o resueltos se devuelven sin modificar
+- `components/layout/sidebar.tsx` — Emojis → Lucide icons (LayoutDashboard, Trophy, Bell, ClipboardList, etc.)
+- `components/layout/navbar.tsx` — 🧠 → Brain icon
+- `app/page.tsx`, `app/rankings/page.tsx`, `app/signals/page.tsx`
+- `app/paper-trades/page.tsx`, `app/journal/page.tsx`, `app/performance/page.tsx`
+- `app/rules/page.tsx`, `app/reports/page.tsx`, `app/backtesting/backtest-page.tsx`
 
 **Problemas encontrados:**
-- 11 errores de typecheck iniciales: timestamp columns esperaban Date (no number), null-safety en unrealizedPnl/realizedPnl con Drizzle `$inferSelect`
-- `closedAt`/`resolvedAt` usaban `Math.floor(Date.now()/1000)` → Corregido a `new Date()` para coincidir con `mode: "timestamp"`
-- `getPaperTradeSnapshot` y `getPaperPortfolioStats` tenían accesos possibly-null a PnL → Añadido `?? 0`
-- Imports muertos: `inArray` (drizzle-orm), `DecisionJournalRow` type → Eliminados
-
-**Próximos pasos:**
-- [ ] Hito 4.2: Script `paper:update-pnl` — Actualización horaria de PnL desde precios de mercado
-- [ ] Hito 4.3: Script `review:outcomes` — Revisión de resultados finales
-- [ ] Tests unitarios para paper-trader
+- Icono `Eye` y `Brain` verificados como disponibles en lucide-react 0.468+
 
 ---
 
-## Métricas de Desarrollo
+### [2026-07-13] — Fase 10: DB Indexes
 
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
-| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
-| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
-| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
-| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
-| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
-| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
-| 2026-07-12 | Hito 4.1: Paper Trader | Motor de simulación completo | N/A | ~430 |
-
-### [2026-07-12] — Tests unitarios para trade-scoring (Hito 3.4)
-
-**Rama:** `main`
 **Estado:** ✅ Completado
 
 **Resumen:**
-Creado `tests/scoring/trade-scoring.test.ts` con 85 tests unitarios, todos pasando. Todas las funciones de scoring son puras — sin mocks necesarios.
-
-**Cobertura por función:**
-
-| Función | Tests | Casos clave |
-|---------|-------|-------------|
-| `scoreWalletQuality` | 6 | Tiers ≥0.8→1.0, ≥0.6→0.8, ≥0.4→0.5, ≥0.2→0.3, <0.2→0.1, monotonicidad |
-| `scoreCategoryFit` | 4 | undefined market, null wallet category, exact match case-insensitive, mismatch→0.4 |
-| `scoreEntryTimingTrade` | 8 | Zero/negative entryPrice, 0% drift, tier thresholds (1%/3%/5%/10%), >10%, simetría |
-| `scoreSpread` | 7 | null neutral, relative spread tiers, absolute fallback (midPrice=0 o ausente) |
-| `scoreLiquidityTrade` | 4 | Zero/negative, monotonicidad, very high→1.0, moderate range check |
-| `scoreROITrade` | 1 | Passthrough wallet.scores.roiScore (0, 0.75, 1.0) |
-| `scoreThesis` | 9 | Size conviction tiers ($500→0.5, $200→0.4, $100→0.3, etc.), price timing (≤2%/≤5%/>5%), ambos lados iguales, clamping |
-| `scoreTimeToResolution` | 8 | Null→0.5, 72h+→1.0, 48h→0.9, 24h→0.75, 12h→0.6, 6h→0.4, 2h→0.2, <2h→0.1 |
-| `calculateTradeScores` | 5 | 8 componentes nombrados, ranges [0,1], price drift, midPrice spread, zero walletEntryPrice |
-| `calculateConfidence` | 8 | Base 0.5, +0.1 c/u (spread/liquidity/time/walletEntryPrice), +0.05 c/u (category/detectedPrice), exact 1.0 with all data, clamping |
-| `calculateCopyScore` | 5 | Weighted*confidence, scaling by confidence, all zeros→0, clamping, exact weight calculation with categoryFit>1 |
-| `determineDecision` | 3 | paper_copy>0.65, watchlist≥0.35 (boundary 0.65=watchlist), skip<0.35 |
-| `calculatePositionSize` | 5 | skip→0, watchlist→3, paper_copy $5 at threshold, $20 at 1.0, linear interpolation |
-| `scoreTrade` | 5 | Full result fields, paper_copy for high quality, skip for low, reasons/risks present, oneHitWonderPenalty risk |
-| `scoreTrades` | 2 | Sorted by copyScore desc, empty input |
-
-**Total: 85 tests nuevos → 217 tests totales pasando (66 + 132 + 19 previos + 85 nuevos)**
-
-**Archivos creados:**
-- `tests/scoring/trade-scoring.test.ts` — 85 tests (~640 líneas)
-
-**Problemas encontrados:**
-- 3 tests con fallos por floating-point: `0.5555/0.55` no es exactamente `0.01`, `0.175/0.35` no es exactamente `0.5`, category por defecto en confidence base → Corregido con valores que evitan límites (0.55495, 0.755, category: undefined explícito)
-- 4 errores de tipo en el helper `makeWallet` porque `Partial<WalletScoreResult>` requería `scores` completo → Separado en tipo `WalletOverrides` con `Omit` + spread sobre `defaultScores` con `as` cast
-
-**Próximos pasos:**
-- [ ] Hito 4.2: Script `paper:update-pnl`
-- [ ] Tests unitarios para paper-trader
-- [ ] Hito 4.3: Script `review:outcomes`
-
----
-
-## Métricas de Desarrollo
-
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
-| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
-| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
-| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
-| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
-| 2026-07-12 | Hito 3.4: Tests trade-scoring | 85 tests unitarios, todos pasando | 217/217 ✅ | ~640 |
-| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
-| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
-| 2026-07-12 | Hito 4.1: Paper Trader | Motor de simulación completo | N/A | ~430 |
-| 2026-07-12 | Hito 4.2: update-pnl | Actualizador horario de PnL | N/A | ~120 |
-| 2026-07-12 | Hito 4.3: review-outcomes | Revisor de resultados + OutcomeReview | N/A | ~180 |
-| 2026-07-12 | Hito 5.1: Rule Engine | Motor de reglas versionadas + automejora | N/A | ~280 |
-| 2026-07-12 | Hito 5.2: update-rules | Script de auto-actualizacion de reglas | N/A | ~150 |
-| 2026-07-12 | Hito 6.1: Daily Report | Generador de reportes diarios + formato Telegram | N/A | ~350 |
-
-### [2026-07-12] — Hito 6.1: Generador de Reportes Diarios
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Implementado `lib/reports/daily-report.ts` (~350 líneas). Genera reportes diarios con métricas del portafolio simulado, mejores/peores wallets, cambios de reglas, y formato para Telegram.
-
-**Funciones principales:**
-
-| Función | Descripción |
-|---------|-------------|
-| `generateDailyReport(dateStr?)` | Genera reporte completo: portfolio stats, signal counts del día, wallet performance agregada, rule changes, summary. Persiste en `daily_reports` (upsert delete+insert) |
-| `formatReportForTelegram(report)` | Formatea el reporte en Markdown con emojis para envío por Telegram |
-| `getDailyReport(dateStr)` | Carga reporte guardado por fecha |
-| `getAllDailyReports()` | Lista todos los reportes, más reciente primero |
-| `markReportSent(dateStr)` | Marca reporte como enviado a Telegram |
-
-**Métricas del reporte:**
-- **Portfolio**: PnL total, win rate, posiciones abiertas
-- **Señales**: Total, paper_copy, watchlist, skip del día
-- **Wallets**: Top 5 mejores y peores por PnL simulado (agregado en memoria)
-- **Reglas**: Cambios aplicados hoy con before/after version
-- **Summary**: Texto generado con emojis y métricas clave
-
-**Telegram format**: Mensaje Markdown con secciones (Performance, Signals, Top/Worst Wallets, Rule Changes) usando `*bold*`, \`code\`, `_italic_`.
-
-**Decisiones tomadas:**
-- **between() con as any para timestamps**: Drizzle tiene tipos complejos para columnas timestamp-mode. `between(col as any, start as any, end as any)` funciona correctamente en runtime con Unix timestamps.
-- **Upsert delete+insert**: Más simple que ON CONFLICT, válido para script mono-proceso.
-- **Agregación de wallets en memoria**: Para <1000 paper trades, más simple que SQL GROUP BY.
+Añadidos índices Drizzle a todas las tablas para optimizar queries frecuentes: búsqueda por wallet address, status, fecha de creación, market ID, etc. Cada tabla tiene índices compuestos simples en las columnas más consultadas.
 
 **Archivos modificados:**
-- `lib/reports/daily-report.ts` — Implementación completa (~350 líneas)
-
-**Próximos pasos:**
-- [ ] Hito 6.2: Integración Telegram (`lib/notifications/telegram.ts`)
-- [ ] Hito 6.3: Script `report:daily` — Orquesta generación + envío
+- `db/schema.ts` — 20+ índices añadidos via `index()` en el esquema Drizzle
 
 ---
 
-## Métricas de Desarrollo
+### [2026-07-13] — Fase 10: Favicon Personalizado
 
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
-| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
-| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
-| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
-| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
-| 2026-07-12 | Hito 3.4: Tests trade-scoring | 85 tests unitarios, todos pasando | 217/217 ✅ | ~640 |
-| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
-| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
-| 2026-07-12 | Hito 4.1: Paper Trader | Motor de simulación completo | N/A | ~430 |
-| 2026-07-12 | Hito 4.2: update-pnl | Actualizador horario de PnL | N/A | ~120 |
-| 2026-07-12 | Hito 4.3: review-outcomes | Revisor de resultados + OutcomeReview | N/A | ~180 |
-| 2026-07-12 | Hito 5.1: Rule Engine | Motor de reglas versionadas + automejora | N/A | ~280 |
-| 2026-07-12 | Hito 5.2: update-rules | Script de auto-actualizacion de reglas | N/A | ~150 |
-| 2026-07-12 | Hito 6.1: Daily Report | Generador de reportes diarios + Telegram | N/A | ~350 |
-
-**Rama:** `main`
 **Estado:** ✅ Completado
 
 **Resumen:**
-Implementado `scripts/update-pnl.ts` (~120 líneas). Actualiza el PnL simulado de paper trades abiertos consultando precios desde la API de Polymarket.
+Creado favicon SVG con fondo degradado verde (`#22c55e` → `#16a34a`) y letra "M" blanca. Referenciado en layout.tsx via `<link rel="icon">`.
 
-**Flujo:**
-1. Obtiene paper trades open via `getOpenPaperTrades()`
-2. Para cada trade, `fetchMarketData(marketId)` → yesPrice/noPrice actuales
-3. Selecciona precio correcto según side (yes→yesPrice, no→noPrice)
-4. `updatePaperTradePnL(id, currentPrice)` → actualiza unrealized PnL + crea PnlSnapshot
-5. Display: PnL por trade con +/-$$ y resumen final con PnL total
-
-**Rate limiting:** 150ms delay entre llamadas.
-
-**Archivos modificados:**
-- `scripts/update-pnl.ts` — Implementación completa (~120 líneas)
-
-**Problemas encontrados:**
-- Dead imports del stub original (`db`, `paperTrades`, `eq`) → Eliminados
-
-**Próximos pasos:**
-- [ ] Hito 4.3: Script `review:outcomes`
-- [ ] Tests unitarios para paper-trader
+**Archivos creados/modificados:**
+- `public/favicon.svg` — Icono SVG
+- `app/layout.tsx` — Favicon link element
 
 ---
 
-## Métricas de Desarrollo
+### [2026-07-13] — Limpieza de Código Muerto
 
-| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
-|-------|------|--------------------|---------------|------------------|
-| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
-| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado, DB schema, build OK | N/A | ~800 |
-| 2026-07-12 | Hito 1: Adaptadores | 5 archivos, 4 adaptadores, typecheck OK | N/A | ~950 |
-| 2026-07-12 | Hito 1.5: Tests adaptadores | 4 test files, 66 tests, todos pasando | 66/66 ✅ | ~850 |
-| 2026-07-12 | Hito 2.1: Scoring | Motor de scoring de billeteras, typecheck OK | N/A | ~350 |
-| 2026-07-12 | Hito 2.4: Tests scoring | 132 tests unitarios, todos pasando | 198/198 ✅ | ~400 |
-| 2026-07-12 | Hito 2.2: scan:leaderboard | Script CLI + probado vs API real ✅ | N/A | ~180 |
-| 2026-07-12 | Hito 2.3: scan:wallets | Perfilador + upsert DB | N/A | ~300 |
-| 2026-07-12 | Hito 3.1: Trade scoring | Motor de scoring de trades | N/A | ~380 |
-| 2026-07-12 | Hito 3.4: Tests trade-scoring | 85 tests unitarios, todos pasando | 217/217 ✅ | ~640 |
-| 2026-07-12 | Hito 3.2: monitor:trades | Detector de trades + snapshots | N/A | ~230 |
-| 2026-07-12 | Hito 3.3: score:trades | Calificador → DecisionJournal | N/A | ~190 |
-| 2026-07-12 | Hito 4.1: Paper Trader | Motor de simulación completo | N/A | ~430 |
-| 2026-07-12 | Hito 4.2: update-pnl | Actualizador horario de PnL | N/A | ~120 |
-| 2026-07-12 | Hito 4.3: review-outcomes | Revisor de resultados + OutcomeReview | N/A | ~180 |
-| 2026-07-12 | Hito 5.1: Rule Engine | Motor de reglas versionadas + automejora | N/A | ~280 |
-| 2026-07-12 | Hito 5.2: update-rules | Script de auto-actualizacion de reglas | N/A | ~150 |
+**Estado:** ✅ Completado
 
-> *Esta sección se poblará a medida que avance el desarrollo. Aquí van insights no obvios, errores costosos, y descubrimientos útiles.*
+**Resumen:**
+Eliminadas clases CSS `.card-custom` y `.card-custom-sm` de `globals.css` que ya no se usaban (el componente Card usa Tailwind inline).
 
-1. *(vacío — el desarrollo aún no comienza)*
+**Archivos modificados:**
+- `app/globals.css` — Eliminadas clases muertas
+
+---
+
+### [2026-07-13] — Cambio de Nombre: Hermes → MESIRVE
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+Renombrado el bot de "Hermes" a "MESIRVE" en 22 archivos. Dashboard, scripts CLI, reportes Telegram, documentación. `package.json` name → `mesirve-copybot`.
+
+**Archivos modificados:**
+- `package.json` — name: `mesirve-copybot`
+- `public/favicon.svg` — Favicon con "M"
+- `app/layout.tsx` — Metadata title
+- Todas las páginas, componentes, scripts, tests y documentación
+
+---
+
+### [2026-07-13] — Fase 10: Internacionalización (next-intl)
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+Implementado sistema multi-idioma con next-intl v4. Configuración completa:
+
+1. `i18n/routing.ts` — Router con locale español
+2. `i18n/request.ts` — Request config con lazy loading de mensajes
+3. `next.config.js` — Plugin createNextIntlPlugin
+4. `messages/es.json` — ~250 keys en 14 namespaces (common, nav, overview, rankings, signals, paperTrades, backtesting, journal, performance, rules, reports, wallet, notFound, theme, status)
+
+Traducidas las 9 páginas del dashboard + sidebar + navbar + ThemeToggle + not-found. Arquitectura lista para añadir inglés: crear `messages/en.json` + añadir `"en"` a `routing.locales`.
+
+**Archivos creados/modificados:**
+- `i18n/routing.ts` — Nuevo
+- `i18n/request.ts` — Nuevo
+- `messages/es.json` — Nuevo (~250 keys)
+- `next.config.js` — Añadido plugin next-intl
+- `app/layout.tsx` — NextIntlClientProvider
+- Todas las páginas — useTranslations/getTranslations
+- `components/layout/sidebar.tsx` — useTranslations
+- `components/layout/navbar.tsx` — useTranslations
+- `components/theme-toggle.tsx` — useTranslations
+
+**Decisiones tomadas:**
+- **next-intl sobre i18next**: Estándar para Next.js 15 App Router, tipado automático, soporte Server + Client Components
+- **Single locale (es) por ahora**: Sin middleware de detección, sin `[locale]` dynamic segment. Fácil de extender.
+- **Import directo de JSON en layout**: `getMessages()` requiere `i18n/request.ts` bien configurado con el plugin.
+
+**Problemas encontrados:**
+- `getMessages()` no funcionaba sin el plugin en next.config.js → Añadido `createNextIntlPlugin`
+- Reports page usaba `t.rich()` para JSX interpolation → Simplificado a concatenación con hardcode
+- Journal page tenía sintaxis duplicada → Corregido
+
+---
+
+### [2026-07-13] — Documentación Completa: README, PLAN, ROADMAP, DEVLOG
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+Actualización masiva de toda la documentación del proyecto:
+
+**README.md:**
+- Añadida Fase 10 (i18n, UI Polish) a la documentación
+- Nuevas secciones: Internacionalización, UI/UX Features, Mejoras Futuras
+- Stack actualizado con next-intl y Lucide
+- Fix de referencias antiguas (hermes → MESIRVE, data/hermes.db → data/mesirve.db)
+- Documentados nuevos CLI args (`--limit`, `--skip-recent`, `--compare`)
+
+**PLAN.md:**
+- Añadida Fase 10 completa con 10 sub-tareas
+- Arquitectura actualizada con CAPA 3 (i18n)
+- Tabla de fases ahora incluye estados (✅ completado)
+- Documentados cambios técnicos (DB indexes, leaderboard adapter fix, revalidate)
+- Sección de mejoras futuras con corto/medio/largo plazo
+
+**DEVLOG.md:**
+- Nuevas entradas para todas las sesiones faltantes:
+  - Theme toggle (FOUC prevention, localStorage)
+  - Tooltips en sidebar (CSS puro, delay 250ms)
+  - Iconos Lucide en todo el dashboard
+  - DB indexes
+  - Favicon personalizado
+  - Limpieza de CSS muerto
+  - Cambio de nombre Hermes → MESIRVE
+  - Internacionalización (next-intl)
+  - Esta entrada de documentación
+
+**ROADMAP.md:**
+- Todas las fases 0-9 marcadas como completadas
+- Añadido Hito 10: UI Polish & Internacionalización
+- Añadido Hito 11: Mejoras Futuras (propuesto)
+- Fix de referencias a hermes-copybot
+- Semanas de desarrollo actualizadas
+
+**Archivos modificados:**
+- `README.md`, `PLAN.md`, `DEVLOG.md`, `ROADMAP.md`
+
+---
+
+## Lecciones Aprendidas
+
+1. **next-intl plugin es obligatorio**: Sin `createNextIntlPlugin()` en next.config.js, `getMessages()` falla con "couldn't find config file"
+2. **t.rich() vs JSX**: Para componentes que necesitan interpolar elementos JSX, `t.rich()` es la herramienta correcta. Para texto plano, `t()` simple basta
+3. **FOUC prevention**: El script inline en `<head>` es la única forma fiable de evitar flash del tema incorrecto. CSS solo no es suficiente
+4. **Tooltips con delay**: 250ms es el sweet spot entre evitar falsos positivos y no sentirse lento
+5. **CSS puro para componentes simples**: No siempre se necesita una librería. El tooltip de sidebar es ~50 líneas de CSS+React vs ~200 líneas con @floating-ui
+6. **DB indexes tempranos**: Mejor añadirlos en el schema desde el principio que tener que migrar después
+7. **force-dynamic → revalidate**: ISR con `revalidate = 60` es mejor que `force-dynamic` para páginas que no necesitan datos fresh en cada request
 
 ---
 
 ## Deuda Técnica Registrada
 
-> *Decisiones conscientes de simplificación que pueden necesitar revisión futura.*
-
 | ID | Descripción | Prioridad | Fecha registro |
 |----|-------------|-----------|----------------|
-| — | *(sin deuda técnica aún)* | — | — |
+| DT-001 | Light mode no afecta completamente sidebar y cards (usan bg-surface) | Baja | 2026-07-13 |
+| DT-002 | Tooltip puede overflowear en viewports muy angostos (<900px) | Baja | 2026-07-13 |
+| DT-003 | Journal, Wallet y Backtesting pages tienen traducciones pendientes | Media | 2026-07-13 |
+| DT-004 | Sin tests de integración para i18n | Baja | 2026-07-13 |
 
 ---
 
@@ -899,9 +380,39 @@ Implementado `scripts/update-pnl.ts` (~120 líneas). Actualiza el PnL simulado d
 | Riesgo | Probabilidad | Impacto | Mitigación |
 |--------|-------------|---------|------------|
 | APIs de Polymarket pueden cambiar sin aviso | Media | Alto | Capa de adaptadores abstrae los detalles de API |
-| Rate limiting en APIs públicas | Media | Medio | Implementar backoff exponencial y caché |
+| Rate limiting en APIs públicas | Media | Medio | Backoff exponencial + caché + delay entre requests |
 | SQLite no escala para datos históricos grandes | Baja (v1) | Bajo | Migrar a PostgreSQL en v2 si es necesario |
-| Billeteras del leaderboard pueden ser bots/sybils | Alta | Medio | El scoring penaliza one-hit-wonders y detecta patrones sospechosos |
+| Wallets del leaderboard pueden ser bots/sybils | Alta | Medio | Scoring penaliza one-hit-wonders + detecta patrones |
+| next-intl breaking changes en future updates | Baja | Medio | next-intl v4 estable, API madura |
+
+---
+
+## Métricas de Desarrollo
+
+| Fecha | Hito | Tareas completadas | Tests pasando | Líneas de código |
+|-------|------|--------------------|---------------|------------------|
+| 2026-07-12 | Planificación | Documentos creados | N/A | N/A |
+| 2026-07-12 | Hito 0: Fundación | Proyecto inicializado | N/A | ~800 |
+| 2026-07-12 | Hito 1: Adaptadores | 4 adaptadores + cliente HTTP | N/A | ~950 |
+| 2026-07-12 | Hito 1.5: Tests adaptadores | 66 tests | 66/66 ✅ | ~850 |
+| 2026-07-12 | Hito 2.1: Wallet scoring | Motor scoring 8 componentes | N/A | ~350 |
+| 2026-07-12 | Hito 2.4: Tests wallet scoring | 132 tests | 198/198 ✅ | ~400 |
+| 2026-07-12 | Hito 2.2-2.3: Scanner scripts | scan:leaderboard + scan:wallets | N/A | ~480 |
+| 2026-07-12 | Hito 3.1: Trade scoring | Motor scoring trades 8 componentes | N/A | ~380 |
+| 2026-07-12 | Hito 3.4: Tests trade scoring | 85 tests | 217/217 ✅ | ~640 |
+| 2026-07-12 | Hito 3.2-3.3: Monitor+Score | monitor:trades + score:trades | N/A | ~420 |
+| 2026-07-12 | Hito 4.1: Paper trader | Motor simulación completo | N/A | ~430 |
+| 2026-07-12 | Hito 4.2-4.3: Update+Review | update-pnl + review-outcomes | N/A | ~300 |
+| 2026-07-12 | Hito 4.4: Benchmarks | Bot vs copia ciega | N/A | ~200 |
+| 2026-07-12 | Hito 5.1-5.2: Rule engine | Motor reglas + update:rules | N/A | ~430 |
+| 2026-07-12 | Hito 5.3-5.4: Tests rules | 2 test files | 343/343 ✅ | ~500 |
+| 2026-07-12 | Hito 6: Reports+Telegram | daily, weekly, Telegram | N/A | ~600 |
+| 2026-07-12 | Hito 7: Dashboard | 9 páginas + componentes | N/A | ~1500 |
+| 2026-07-12 | Hito 8: Backtesting | Motor + CLI + UI | N/A | ~500 |
+| 2026-07-12 | Hito 9: Tests+Seguridad | Security + integration + seed | 343/343 ✅ | ~800 |
+| 2026-07-13 | Hito 10: UI Polish | Theme, tooltips, icons, favicon | 343/343 ✅ | ~300 |
+| 2026-07-13 | Hito 10: i18n | next-intl, messages/es.json | 343/343 ✅ | ~600 |
+| 2026-07-13 | Documentación | README, PLAN, DEVLOG, ROADMAP | 343/343 ✅ | ~400 |
 
 ---
 
@@ -909,21 +420,6 @@ Implementado `scripts/update-pnl.ts` (~120 líneas). Actualiza el PnL simulado d
 
 - **v2 podría incluir:** Ejecución real con wallet de prueba, PostgreSQL en Supabase, autenticación de usuario, notificaciones push.
 - **Integración Max HQ:** El dashboard está diseñado para encajar como un módulo dentro de Max HQ. Los estilos deben ser compatibles.
-- **Hermes como operador:** En producción, Hermes ejecutaría los scripts programados vía cron. El dashboard es solo lectura.
-
-### [2026-07-13] — Cierre de brechas finales: Hitos 4.4, 6.4, 7.4, tests y seguridad
-
-**Rama:** `main`
-**Estado:** ✅ Completado
-
-**Resumen:**
-Revisión completa de PLAN.md, ROADMAP.md, DEVLOG.md y SAFETY.md. Identificadas y cerradas todas las brechas:
-
-1. `lib/simulation/benchmarks.ts` (Hito 4.4): compareBotVsBlindCopy, trackMissedWinners, trackAvoidedLosers, trackSpreadLossesAvoided
-2. `lib/reports/weekly-report.ts` (Hito 6.4): generateWeeklyReport, formatWeeklyReportForTelegram
-3. `app/wallets/[address]/page.tsx` (Hito 7.4): Página dinámica de perfil de wallet con métricas, scores y rendimiento
-4. `tests/rules/rule-versioning.test.ts` y `tests/rules/auto-update.test.ts` (Hitos 5.3, 5.4)
-5. `tests/simulation/benchmarks.test.ts` y `tests/simulation/update-pnl.test.ts` (Hitos 4.6, 9.2)
-6. `db/index.ts`: Enforcement SIMULATION_MODE="paper_only" al inicio
-
-Resultados: TypeScript 0 errores, 343 tests pasando (15 archivos), +1100 líneas nuevas.
+- **MESIRVE como operador:** En producción, MESIRVE ejecutaría los scripts programados vía cron. El dashboard es solo lectura.
+- **Multi-idioma:** La arquitectura next-intl está lista para inglés. Solo falta crear `messages/en.json` y añadir `"en"` a `routing.locales`.
+- **IA/ML:** El motor de scoring actual es basado en reglas. Un modelo ML podría mejorar significativamente la precisión de las decisiones.

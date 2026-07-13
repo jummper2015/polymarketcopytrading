@@ -86,12 +86,13 @@ export async function fetchLeaderboard(
     const pageEntries = await apiFetch<Record<string, unknown>[]>(url);
 
     // Map API response to our type
-    const mapped = pageEntries.map((entry) => ({
-      address: String(entry.user || entry.address || ""),
+    // Polymarket Data API returns proxyWallet for the address and userName for the label
+    const mapped = pageEntries.map((entry: Record<string, unknown>) => ({
+      address: String(entry.proxyWallet || entry.user || entry.address || ""),
       rank: Number(entry.rank ?? offset + 1),
-      label: entry.name ? String(entry.name) : undefined,
+      label: entry.userName ? String(entry.userName) : entry.name ? String(entry.name) : undefined,
       pnl: entry.pnl ? Number(entry.pnl) : undefined,
-      volume: entry.volume ? Number(entry.volume) : undefined,
+      volume: entry.vol ? Number(entry.vol) : entry.volume ? Number(entry.volume) : undefined,
       roi: entry.roi ? Number(entry.roi) : undefined,
       tradeCount: entry.tradeCount ? Number(entry.tradeCount) : undefined,
       winRate: entry.winRate ? Number(entry.winRate) : undefined,

@@ -1,6 +1,14 @@
 import { db } from "@/db";
 import { walletProfiles } from "@/db/schema";
 import { desc } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
+import {
+  Trophy,
+  CheckCircle2,
+  Eye,
+  AlertTriangle,
+  Info,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ScoreBar } from "@/components/ui/score-bar";
 import { StatusDot } from "@/components/ui/status-dot";
@@ -15,22 +23,25 @@ function fmtScore(v: number | null): string {
   return v != null ? v.toFixed(2) : "—";
 }
 
-function statusBadge(status: string) {
+function statusBadge(status: string, t: (key: string) => string) {
   if (status === "track")
-    return <Badge variant="success" icon="✅">track</Badge>;
+    return <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>{t("track")}</Badge>;
   if (status === "watch")
-    return <Badge variant="warning" icon="👁️">watch</Badge>;
-  return <Badge variant="neutral">ignore</Badge>;
+    return <Badge variant="warning" icon={<Eye className="size-3" />}>{t("watch")}</Badge>;
+  return <Badge variant="neutral">{t("ignore")}</Badge>;
 }
 
 function penaltyBadge(v: number | null) {
   if (!v || v === 0) return null;
-  if (v >= 0.3) return <Badge variant="danger">⚠️ {v.toFixed(2)}</Badge>;
+  if (v >= 0.3) return <Badge variant="danger" icon={<AlertTriangle className="size-3" />}>{v.toFixed(2)}</Badge>;
   if (v >= 0.1) return <Badge variant="warning">{v.toFixed(2)}</Badge>;
   return <span className="text-xs text-surface-500">{v.toFixed(2)}</span>;
 }
 
 export default async function RankingsPage() {
+  const t = await getTranslations("rankings");
+  const st = await getTranslations("status");
+
   const wallets = await db
     .select()
     .from(walletProfiles)
@@ -39,39 +50,39 @@ export default async function RankingsPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-surface-50">
-          Wallet Rankings
+      <div className="page-header">
+        <h2 className="flex items-center gap-2">
+          <Trophy className="size-6 text-amber-400" />
+          {t("title")}
         </h2>
-        <p className="text-sm text-surface-400 mt-1">
-          Top 100 billeteras por global score. Datos de los últimos 30 días.
-        </p>
+        <p>{t("description")}</p>
       </div>
 
       <div className="overflow-x-auto">
         {wallets.length === 0 ? (
           <div className="text-center py-12 text-surface-500">
-            <p className="text-lg mb-1">No wallet profiles yet</p>
+            <p className="text-lg mb-1">{t("noWallets")}</p>
             <p className="text-sm">
-              Run <code className="text-brand-400">npm run scan:leaderboard</code>{" "}
-              and <code className="text-brand-400">npm run scan:wallets</code>{" "}
-              to populate data.
+              {t.rich("runScan", {
+                cmd1: (chunks) => <code className="text-brand-400">{chunks}</code>,
+                cmd2: (chunks) => <code className="text-brand-400">{chunks}</code>
+              })}
             </p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-700/50">
-                <th className="table-header w-10">#</th>
-                <th className="table-header">Address</th>
-                <th className="table-header">Status</th>
-                <th className="table-header text-right">Global</th>
-                <th className="table-header text-right">ROI</th>
-                <th className="table-header text-right">Consistency</th>
-                <th className="table-header text-right">Copyability</th>
-                <th className="table-header text-right">Penalty</th>
-                <th className="table-header">Category</th>
-                <th className="table-header text-right">Trades</th>
+                <th className="table-header w-10">{t("rank")}</th>
+                <th className="table-header">{t("address")}</th>
+                <th className="table-header">{t("status")}</th>
+                <th className="table-header text-right">{t("global")}</th>
+                <th className="table-header text-right">{t("roi")}</th>
+                <th className="table-header text-right">{t("consistency")}</th>
+                <th className="table-header text-right">{t("copyability")}</th>
+                <th className="table-header text-right">{t("penalty")}</th>
+                <th className="table-header">{t("category")}</th>
+                <th className="table-header text-right">{t("trades")}</th>
               </tr>
             </thead>
             <tbody>
@@ -107,7 +118,7 @@ export default async function RankingsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="table-cell">{statusBadge(w.status)}</td>
+                  <td className="table-cell">{statusBadge(w.status, st)}</td>
                   <td className="table-cell text-right">
                     <div className="flex items-center justify-end gap-2">
                       <span className="font-mono font-semibold text-surface-100">
@@ -138,7 +149,7 @@ export default async function RankingsPage() {
                   </td>
                   <td className="table-cell">
                     {w.bestCategory ? (
-                      <Badge variant="info">{w.bestCategory}</Badge>
+                      <Badge variant="info" icon={<Info className="size-3" />}>{w.bestCategory}</Badge>
                     ) : (
                       <span className="text-surface-500">—</span>
                     )}

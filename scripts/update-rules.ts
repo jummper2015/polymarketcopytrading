@@ -22,7 +22,7 @@ async function main() {
   const startTime = Date.now();
 
   console.log("═".repeat(60));
-  console.log("  🧠 Hermes — Rule Updater (Auto-improvement)");
+  console.log("  🧠 MESIRVE — Rule Updater (Auto-improvement)");
   console.log("═".repeat(60));
 
   // Phase 1: Load current rules

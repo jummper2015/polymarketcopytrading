@@ -1,6 +1,8 @@
 import { db } from "@/db";
 import { paperTrades } from "@/db/schema";
 import { desc } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
+import { ClipboardList } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/ui/status-dot";
@@ -72,6 +74,8 @@ export default async function PaperTradesPage() {
     .limit(200);
 
   // Aggregate stats
+  const t = await getTranslations("paperTrades");
+
   const openCount = trades.filter((t) => t.status === "open").length;
   const resolved = trades.filter((t) => t.status === "resolved");
   const wins = resolved.filter((t) => (t.realizedPnl ?? 0) > 0).length;
@@ -85,27 +89,26 @@ export default async function PaperTradesPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-surface-50">
-          Paper Trades
+      <div className="page-header">
+        <h2 className="flex items-center gap-2">
+          <ClipboardList className="size-6 text-brand-400" />
+          {t("title")}
         </h2>
-        <p className="text-sm text-surface-400 mt-1">
-          Operaciones simuladas generadas a partir de decisiones de copia.
-        </p>
+        <p>{t("description")}</p>
       </div>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">Open</p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider">{t("open")}</p>
           <p className="stat-value text-brand-400 mt-1">{openCount}</p>
         </Card>
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">Resolved</p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider">{t("resolved")}</p>
           <p className="stat-value text-blue-400 mt-1">{resolved.length}</p>
         </Card>
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">Win Rate</p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider">{t("winRate")}</p>
           <p className="stat-value text-surface-50 mt-1">
             {resolved.length > 0
               ? `${((wins / resolved.length) * 100).toFixed(0)}%`
@@ -113,7 +116,7 @@ export default async function PaperTradesPage() {
           </p>
         </Card>
         <Card compact>
-          <p className="text-xs text-surface-400 uppercase tracking-wider">Total PnL</p>
+          <p className="text-xs text-surface-400 uppercase tracking-wider">{t("totalPnl")}</p>
           <p
             className={`stat-value mt-1 ${
               totalRealizedPnl + totalUnrealizedPnl >= 0
@@ -145,14 +148,14 @@ export default async function PaperTradesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-surface-700/50">
-                <th className="table-header">Status</th>
-                <th className="table-header">Side</th>
-                <th className="table-header text-right">Entry</th>
-                <th className="table-header text-right">Current</th>
-                <th className="table-header text-right">Position</th>
-                <th className="table-header text-right">PnL</th>
-                <th className="table-header">Wallet</th>
-                <th className="table-header">Market</th>
+                <th className="table-header">{t("status")}</th>
+                <th className="table-header">{t("side")}</th>
+                <th className="table-header text-right">{t("entry")}</th>
+                <th className="table-header text-right">{t("current")}</th>
+                <th className="table-header text-right">{t("position")}</th>
+                <th className="table-header text-right">{t("pnl")}</th>
+                <th className="table-header">{t("wallet")}</th>
+                <th className="table-header">{t("market")}</th>
               </tr>
             </thead>
             <tbody>

@@ -37,7 +37,7 @@ async function main() {
   const startTime = Date.now();
 
   console.log("═".repeat(60));
-  console.log("  👁️  Hermes — Trade Monitor");
+  console.log("  👁️  MESIRVE — Trade Monitor");
   console.log("═".repeat(60));
   console.log(`  Lookback:    ${LOOKBACK_SECONDS / 3600}h`);
   console.log(`  Per wallet:  ${ACTIVITY_LIMIT} activities`);

@@ -7,6 +7,17 @@ import {
 } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
+import {
+  DollarSign,
+  TrendingUp,
+  Target,
+  BarChart3,
+  Activity,
+  AlertTriangle,
+  Info,
+  Search,
+  CheckCircle2,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScoreBar } from "@/components/ui/score-bar";
@@ -121,30 +132,42 @@ export default async function WalletProfilePage({
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Card compact>
-          <p className="text-[10px] text-surface-400 uppercase tracking-wider">Global Score</p>
+          <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+            <Activity className="size-3" /> Global Score
+          </p>
           <p className="text-xl font-bold text-surface-50 mt-1">{fmtScore(wallet.globalScore)}</p>
           <ScoreBar value={wallet.globalScore ?? 0} size="sm" className="mt-1.5" />
         </Card>
         <Card compact>
-          <p className="text-[10px] text-surface-400 uppercase tracking-wider">ROI 30d</p>
+          <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+            <TrendingUp className="size-3" /> ROI 30d
+          </p>
           <p className={`text-xl font-bold mt-1 ${(wallet.roi30d ?? 0) >= 0 ? "text-brand-400" : "text-red-400"}`}>
             {fmtPct(wallet.roi30d)}
           </p>
         </Card>
         <Card compact>
-          <p className="text-[10px] text-surface-400 uppercase tracking-wider">Win Rate 30d</p>
+          <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+            <Target className="size-3" /> Win Rate 30d
+          </p>
           <p className="text-xl font-bold text-surface-50 mt-1">{fmtPct(wallet.winRate30d)}</p>
         </Card>
         <Card compact>
-          <p className="text-[10px] text-surface-400 uppercase tracking-wider">Trades 30d</p>
+          <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+            <BarChart3 className="size-3" /> Trades 30d
+          </p>
           <p className="text-xl font-bold text-surface-50 mt-1">{wallet.tradeCount30d ?? "—"}</p>
         </Card>
         <Card compact>
-          <p className="text-[10px] text-surface-400 uppercase tracking-wider">Resolved</p>
+          <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+            <CheckCircle2 className="size-3" /> Resolved
+          </p>
           <p className="text-xl font-bold text-surface-50 mt-1">{wallet.resolvedTradeCount30d ?? "—"}</p>
         </Card>
         <Card compact>
-          <p className="text-[10px] text-surface-400 uppercase tracking-wider">Avg Trade Size</p>
+          <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+            <DollarSign className="size-3" /> Avg Trade Size
+          </p>
           <p className="text-xl font-bold text-surface-50 mt-1">
             {wallet.averageTradeSize != null ? `$${wallet.averageTradeSize.toFixed(0)}` : "—"}
           </p>
@@ -153,7 +176,7 @@ export default async function WalletProfilePage({
 
       {/* Score breakdown + Category */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Score Breakdown" icon="📊">
+        <Card title="Score Breakdown" icon={<BarChart3 className="size-5 text-brand-400" />}>
           <div className="space-y-3">
             {scores.map((s) => (
               <div key={s.label}>
@@ -168,7 +191,7 @@ export default async function WalletProfilePage({
             ))}
             {wallet.oneHitWonderPenalty != null && wallet.oneHitWonderPenalty > 0 && (
               <div className="flex items-center gap-2 mt-4 pt-3 border-t border-surface-700/30">
-                <Badge variant="danger">⚠️ One-Hit-Wonder</Badge>
+                <Badge variant="danger" icon={<AlertTriangle className="size-3" />}>One-Hit-Wonder</Badge>
                 <span className="text-sm text-surface-400">
                   Penalty: {wallet.oneHitWonderPenalty.toFixed(2)}
                 </span>
@@ -177,7 +200,7 @@ export default async function WalletProfilePage({
           </div>
         </Card>
 
-        <Card title="Profile Details" icon="📋">
+        <Card title="Profile Details" icon={<Info className="size-5 text-blue-400" />}>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
               <span className="text-surface-400">Best Category</span>
@@ -221,14 +244,14 @@ export default async function WalletProfilePage({
       {(wallet.copyabilityNotes || wallet.riskNotes) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {wallet.copyabilityNotes && (
-            <Card title="Copyability Notes" icon="🔍">
+            <Card title="Copyability Notes" icon={<Search className="size-5 text-brand-400" />}>
               <p className="text-sm text-surface-300 whitespace-pre-wrap leading-relaxed">
                 {wallet.copyabilityNotes}
               </p>
             </Card>
           )}
           {wallet.riskNotes && (
-            <Card title="Risk Notes" icon="⚠️">
+            <Card title="Risk Notes" icon={<AlertTriangle className="size-5 text-amber-400" />}>
               <p className="text-sm text-surface-300 whitespace-pre-wrap leading-relaxed">
                 {wallet.riskNotes}
               </p>
@@ -245,7 +268,7 @@ export default async function WalletProfilePage({
             ? `${simulatedTrades.length} paper trades · ${simulatedResolved.length} resolved`
             : "No simulated trades yet"
         }
-        icon="📈"
+        icon={<TrendingUp className="size-5 text-brand-400" />}
       >
         {simulatedTrades.length === 0 ? (
           <p className="text-sm text-surface-500 py-4">
@@ -257,19 +280,25 @@ export default async function WalletProfilePage({
           <>
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div>
-                <p className="text-[10px] text-surface-400 uppercase tracking-wider">Simulated PnL</p>
+                <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                  <DollarSign className="size-3" /> Simulated PnL
+                </p>
                 <p className={`text-lg font-bold tabular-nums ${simulatedPnl >= 0 ? "text-brand-400" : "text-red-400"}`}>
                   {simulatedPnl >= 0 ? "+" : ""}${simulatedPnl.toFixed(2)}
                 </p>
               </div>
               <div>
-                <p className="text-[10px] text-surface-400 uppercase tracking-wider">Win Rate</p>
+                <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                  <Target className="size-3" /> Win Rate
+                </p>
                 <p className="text-lg font-bold text-surface-50">
                   {fmtPct(simulatedWinRate)}
                 </p>
               </div>
               <div>
-                <p className="text-[10px] text-surface-400 uppercase tracking-wider">Resolved</p>
+                <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                  <Activity className="size-3" /> Resolved
+                </p>
                 <p className="text-lg font-bold text-surface-50">
                   {simulatedWins.length}W / {simulatedResolved.length - simulatedWins.length}L
                 </p>
@@ -347,7 +376,7 @@ export default async function WalletProfilePage({
       <Card
         title="Recent Trades"
         subtitle={`Last ${recentTrades.length} trades observed`}
-        icon="🔍"
+        icon={<Search className="size-5 text-blue-400" />}
       >
         {recentTrades.length === 0 ? (
           <p className="text-sm text-surface-500 py-4">

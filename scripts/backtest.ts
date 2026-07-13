@@ -72,7 +72,7 @@ function parseArgs(): CliArgs {
 function printUsage(): void {
   console.log(`
   ═══════════════════════════════════════════════════════════════
-    📊 Hermes — Backtesting CLI
+    📊 MESIRVE — Backtesting CLI
   ═══════════════════════════════════════════════════════════════
 
   Usage:
@@ -202,7 +202,7 @@ async function main() {
   }
 
   console.log("═".repeat(60));
-  console.log("  📊 Hermes — Backtesting Engine");
+  console.log("  📊 MESIRVE — Backtesting Engine");
   console.log("═".repeat(60));
   console.log(`  Period:        ${cli.days} days`);
   console.log(`  Position size: $${cli.positionSize.toFixed(0)}/trade`);

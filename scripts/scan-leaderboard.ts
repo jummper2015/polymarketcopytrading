@@ -19,7 +19,7 @@ async function main() {
   const startTime = Date.now();
 
   console.log("═".repeat(60));
-  console.log("  🔍 Hermes — Polymarket Leaderboard Scanner");
+  console.log("  🔍 MESIRVE — Polymarket Leaderboard Scanner");
   console.log("═".repeat(60));
   console.log(`  Limit:       ${SCAN_LIMIT} wallets`);
   console.log(`  Lookback:    ${LOOKBACK_DAYS} days`);

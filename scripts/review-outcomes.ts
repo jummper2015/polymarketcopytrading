@@ -16,7 +16,7 @@ async function main() {
   const startTime = Date.now();
 
   console.log("═".repeat(60));
-  console.log("  🔍 Hermes — Outcome Reviewer");
+  console.log("  🔍 MESIRVE — Outcome Reviewer");
   console.log("═".repeat(60));
 
   // Phase 1: Get unresolved paper trades (open or closed, not yet resolved)

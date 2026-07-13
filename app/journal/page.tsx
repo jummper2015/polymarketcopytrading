@@ -5,18 +5,20 @@ import {
   paperTrades,
 } from "@/db/schema";
 import { desc, eq, inArray } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
+import { BookOpen, ClipboardList, Eye, SkipForward } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-export const dynamic = "force-dynamic";
 export const revalidate = 60;
 
 function decisionBadge(decision: string) {
+  // Use translated labels inline — this function runs client-side via translations passed in
   if (decision === "paper_copy")
-    return <Badge variant="success" icon="📋">copy</Badge>;
+    return <Badge variant="success" icon={<ClipboardList className="size-3" />}>copy</Badge>;
   if (decision === "watchlist")
-    return <Badge variant="warning" icon="👁️">watch</Badge>;
-  return <Badge variant="danger" icon="⏭️">skip</Badge>;
+    return <Badge variant="warning" icon={<Eye className="size-3" />}>watch</Badge>;
+  return <Badge variant="danger" icon={<SkipForward className="size-3" />}>skip</Badge>;
 }
 
 export default async function JournalPage() {
@@ -62,11 +64,12 @@ export default async function JournalPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-surface-50">
+      <div className="page-header">
+        <h2 className="flex items-center gap-2">
+          <BookOpen className="size-6 text-brand-400" />
           Decision Journal
         </h2>
-        <p className="text-sm text-surface-400 mt-1">
+        <p>
           Timeline de decisiones y lecciones aprendidas del sistema de copy
           trading.
         </p>

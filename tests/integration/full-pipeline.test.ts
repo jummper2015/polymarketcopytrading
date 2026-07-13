@@ -257,7 +257,7 @@ describe("Integration: Daily Report Formatting", () => {
     };
 
     const output = formatReportForTelegram(report);
-    expect(output).toContain("Hermes Daily Report");
+    expect(output).toContain("MESIRVE Daily Report");
     expect(output).toContain("+$42.50");
     expect(output).toContain("Alpha Trader");
     expect(output).toContain("1.0.0");

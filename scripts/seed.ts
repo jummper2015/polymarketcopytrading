@@ -42,7 +42,7 @@ const DECISIONS = ["paper_copy", "watchlist", "skip"] as const;
 
 async function main() {
   console.log("═".repeat(60));
-  console.log("  🌱 Hermes — Database Seeder [DEMO]");
+  console.log("  🌱 MESIRVE — Database Seeder [DEMO]");
   console.log("═".repeat(60));
   console.log("  ⚠️  All data will be tagged [DEMO] — fictional only.\n");
 

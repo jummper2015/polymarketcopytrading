@@ -16,7 +16,7 @@ async function main() {
   const startTime = Date.now();
 
   console.log("═".repeat(60));
-  console.log("  💰 Hermes — PnL Updater");
+  console.log("  💰 MESIRVE — PnL Updater");
   console.log("═".repeat(60));
 
   // Phase 1: Get open trades

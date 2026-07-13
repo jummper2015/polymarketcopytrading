@@ -22,10 +22,44 @@ import { sleep } from "../lib/adapters/client";
 
 // ─── Config ────────────────────────────────────────────────────
 
-const BATCH_SIZE = 5; // Wallets processed concurrently
-const BATCH_DELAY_MS = 500; // Delay between batches (rate limiting)
+const BATCH_SIZE = 10; // Wallets processed concurrently (increased from 5)
+const BATCH_DELAY_MS = 200; // Delay between batches in ms (reduced from 500)
 const LOOKBACK_DAYS = 30;
-const SCAN_LIMIT = 500;
+const DEFAULT_LIMIT = 100; // Default: profile top 100 wallets (reduced from 500)
+
+/**
+ * How recent a profile must be (in ms) to skip re-profiling.
+ * Wallets profiled within this window are skipped when --skip-recent is set.
+ */
+const RECENT_PROFILE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+// ─── CLI Arguments ─────────────────────────────────────────────
+
+interface CliArgs {
+  /** Max wallets to profile (default: 100) */
+  limit: number;
+  /** Skip wallets profiled within the last hour */
+  skipRecent: boolean;
+}
+
+function parseArgs(): CliArgs {
+  const args = process.argv.slice(2);
+  const cli: CliArgs = { limit: DEFAULT_LIMIT, skipRecent: false };
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--limit" && i + 1 < args.length) {
+      const parsed = parseInt(args[++i], 10);
+      if (!isNaN(parsed) && parsed > 0) {
+        cli.limit = parsed;
+      }
+    }
+    if (args[i] === "--skip-recent") {
+      cli.skipRecent = true;
+    }
+  }
+
+  return cli;
+}
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -37,19 +71,24 @@ interface ScanWalletPair {
 // ─── Main ──────────────────────────────────────────────────────
 
 async function main() {
+  const cli = parseArgs();
   const startTime = Date.now();
 
   console.log("═".repeat(60));
-  console.log("  🧬 Hermes — Wallet Profiler & Scorer");
+  console.log("  🧬 MESIRVE — Wallet Profiler & Scorer");
   console.log("═".repeat(60));
   console.log(`  Lookback:    ${LOOKBACK_DAYS} days`);
   console.log(`  Batch size:  ${BATCH_SIZE} wallets`);
   console.log(`  Batch delay: ${BATCH_DELAY_MS}ms`);
+  console.log(`  Wallet cap:  ${cli.limit}`);
+  if (cli.skipRecent) {
+    console.log(`  Skip recent: yes (< ${RECENT_PROFILE_WINDOW_MS / 60_000} min old)`);
+  }
   console.log("─".repeat(60));
 
   // Phase 1: Get the latest scan and wallet list
   console.log("\n  📋 Loading latest leaderboard scan...");
-  const wallets = await getWalletsFromLatestScan();
+  const wallets = await getWalletsFromLatestScan(cli.limit);
 
   if (wallets.length === 0) {
     console.log(
@@ -58,23 +97,40 @@ async function main() {
     process.exit(0);
   }
 
-  console.log(`  ✅ Found ${wallets.length} wallets from latest scan`);
+  // Phase 1b: If --skip-recent, filter out wallets profiled within the last hour
+  let walletsToProfile = wallets;
+  if (cli.skipRecent && wallets.length > 0) {
+    const recentAddrs = await getRecentlyProfiledAddresses();
+    if (recentAddrs.size > 0) {
+      walletsToProfile = wallets.filter((w) => !recentAddrs.has(w.address));
+      console.log(
+        `  ⏭️  Skipping ${recentAddrs.size} wallets profiled recently (${wallets.length - walletsToProfile.length} skipped, ${walletsToProfile.length} remaining)`
+      );
+    }
+  }
+
+  console.log(`  ✅ ${walletsToProfile.length} wallets to profile`);
+
+  if (walletsToProfile.length === 0) {
+    console.log("  ℹ️  All wallets already profiled recently. Nothing to do.");
+    process.exit(0);
+  }
 
   // Phase 2: Profile each wallet in batches
-  console.log(`\n  🔬 Profiling ${wallets.length} wallets...`);
+  console.log(`\n  🔬 Profiling ${walletsToProfile.length} wallets...`);
   console.log(`  (Fetching activity data + computing scores)`);
 
   const results: ProfileResult[] = [];
   let profiled = 0;
   let errors = 0;
 
-  for (let i = 0; i < wallets.length; i += BATCH_SIZE) {
-    const batch = wallets.slice(i, i + BATCH_SIZE);
+  for (let i = 0; i < walletsToProfile.length; i += BATCH_SIZE) {
+    const batch = walletsToProfile.slice(i, i + BATCH_SIZE);
     const batchNum = Math.floor(i / BATCH_SIZE) + 1;
-    const totalBatches = Math.ceil(wallets.length / BATCH_SIZE);
+    const totalBatches = Math.ceil(walletsToProfile.length / BATCH_SIZE);
 
     process.stdout.write(
-      `\r  Batch ${batchNum}/${totalBatches} — processing wallets ${i + 1}-${Math.min(i + BATCH_SIZE, wallets.length)}...`
+      `\r  Batch ${batchNum}/${totalBatches} — processing wallets ${i + 1}-${Math.min(i + BATCH_SIZE, walletsToProfile.length)}...`
     );
 
     const batchResults = await Promise.allSettled(
@@ -91,7 +147,7 @@ async function main() {
     }
 
     // Delay between batches for rate limiting
-    if (i + BATCH_SIZE < wallets.length) {
+    if (i + BATCH_SIZE < walletsToProfile.length) {
       await sleep(BATCH_DELAY_MS);
     }
   }
@@ -125,9 +181,27 @@ async function main() {
   printSummary(results.map((r) => r.score), startTime);
 }
 
+/** Get wallet addresses that were profiled within the recent window */
+async function getRecentlyProfiledAddresses(): Promise<Set<string>> {
+  const cutoff = new Date(Date.now() - RECENT_PROFILE_WINDOW_MS);
+  // Fetch all wallet addresses with their last scan time, filter in JS
+  const rows = await db
+    .select({
+      address: walletProfiles.address,
+      lastScannedAt: walletProfiles.lastScannedAt,
+    })
+    .from(walletProfiles);
+
+  return new Set(
+    rows
+      .filter((r) => r.lastScannedAt !== null && r.lastScannedAt >= cutoff)
+      .map((r) => r.address)
+  );
+}
+
 // ─── Wallet List ───────────────────────────────────────────────
 
-async function getWalletsFromLatestScan(): Promise<ScanWalletPair[]> {
+async function getWalletsFromLatestScan(limit: number = DEFAULT_LIMIT): Promise<ScanWalletPair[]> {
   // Get the most recent scan
   const scans = await db
     .select()
@@ -155,7 +229,9 @@ async function getWalletsFromLatestScan(): Promise<ScanWalletPair[]> {
           | Array<{ address: string; rank: number; pnl?: number; roi?: number }>
           | undefined;
 
-        for (const addr of summary.addresses as string[]) {
+        const limitedAddrs = (summary.addresses as string[]).slice(0, limit);
+
+        for (const addr of limitedAddrs) {
           const entry = top10?.find((t) => t.address === addr);
           pairs.push({
             address: addr,
@@ -178,7 +254,7 @@ async function getWalletsFromLatestScan(): Promise<ScanWalletPair[]> {
 
   // Fallback: re-fetch leaderboard
   console.log("  (No addresses in scan — re-fetching leaderboard...)");
-  const entries = await fetchLeaderboard(SCAN_LIMIT, {
+  const entries = await fetchLeaderboard(limit, {
     timePeriod: "ALL",
     category: "OVERALL",
   });

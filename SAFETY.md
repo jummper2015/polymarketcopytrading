@@ -1,4 +1,4 @@
-# SAFETY.md — Polymarket Copy Trading Bot
+# SAFETY.md — MESIRVE Polymarket Copy Trading Bot
 
 > **Este documento explica las medidas de seguridad, limitaciones y riesgos del sistema.**
 
@@ -143,4 +143,4 @@ Si encuentras un problema de seguridad, por favor:
 
 ---
 
-*Última actualización: 2026-07-12*
+*Última actualización: 2026-07-13*

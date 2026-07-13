@@ -1,9 +1,10 @@
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
 // ─── LeaderboardScan ───────────────────────────────────────────
 
-export const leaderboardScans = sqliteTable("leaderboard_scan", {
+export const leaderboardScans = sqliteTable("leaderboard_scan",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   source: text("source").notNull().default("polymarket"),
   scannedAt: integer("scanned_at", { mode: "timestamp" })
@@ -12,11 +13,14 @@ export const leaderboardScans = sqliteTable("leaderboard_scan", {
   walletCount: integer("wallet_count").notNull(),
   lookbackDays: integer("lookback_days").notNull().default(30),
   rawSummaryJson: text("raw_summary_json"),
-});
+}, (table) => ({
+  scannedAtIndex: index("idx_lb_scan_scanned_at").on(table.scannedAt),
+}));
 
 // ─── WalletProfile ─────────────────────────────────────────────
 
-export const walletProfiles = sqliteTable("wallet_profile", {
+export const walletProfiles = sqliteTable("wallet_profile",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   address: text("address").notNull().unique(),
   label: text("label"),
@@ -47,11 +51,16 @@ export const walletProfiles = sqliteTable("wallet_profile", {
   updatedAt: integer("updated_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  addressIdx: index("idx_wallet_addr").on(table.address),
+  statusIdx: index("idx_wallet_status").on(table.status),
+  globalScoreIdx: index("idx_wallet_score").on(table.globalScore),
+}));
 
 // ─── ObservedTrade ─────────────────────────────────────────────
 
-export const observedTrades = sqliteTable("observed_trade", {
+export const observedTrades = sqliteTable("observed_trade",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   walletAddress: text("wallet_address").notNull(),
   marketId: text("market_id").notNull(),
@@ -70,11 +79,16 @@ export const observedTrades = sqliteTable("observed_trade", {
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  otWalletIdx: index("idx_ot_wallet").on(table.walletAddress),
+  otMarketIdx: index("idx_ot_market").on(table.marketId),
+  otCreatedIdx: index("idx_ot_created").on(table.createdAt),
+}));
 
 // ─── MarketSnapshot ────────────────────────────────────────────
 
-export const marketSnapshots = sqliteTable("market_snapshot", {
+export const marketSnapshots = sqliteTable("market_snapshot",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   marketId: text("market_id").notNull(),
   conditionId: text("condition_id"),
@@ -92,11 +106,14 @@ export const marketSnapshots = sqliteTable("market_snapshot", {
     .notNull()
     .default(sql`(unixepoch())`),
   rawMarketJson: text("raw_market_json"),
-});
+}, (table) => ({
+  msMarketIdx: index("idx_ms_market").on(table.marketId),
+}));
 
 // ─── DecisionJournal ───────────────────────────────────────────
 
-export const decisionJournals = sqliteTable("decision_journal", {
+export const decisionJournals = sqliteTable("decision_journal",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   observedTradeId: integer("observed_trade_id").references(
     () => observedTrades.id
@@ -124,11 +141,18 @@ export const decisionJournals = sqliteTable("decision_journal", {
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  djWalletIdx: index("idx_dj_wallet").on(table.walletAddress),
+  djMarketIdx: index("idx_dj_market").on(table.marketId),
+  djDecisionIdx: index("idx_dj_decision").on(table.decision),
+  djCreatedIdx: index("idx_dj_created").on(table.createdAt),
+  djObsTradedIdx: index("idx_dj_obs_trade").on(table.observedTradeId),
+}));
 
 // ─── PaperTrade ────────────────────────────────────────────────
 
-export const paperTrades = sqliteTable("paper_trade", {
+export const paperTrades = sqliteTable("paper_trade",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   decisionJournalId: integer("decision_journal_id").references(
     () => decisionJournals.id
@@ -152,11 +176,18 @@ export const paperTrades = sqliteTable("paper_trade", {
     .default(sql`(unixepoch())`),
   closedAt: integer("closed_at", { mode: "timestamp" }),
   resolvedAt: integer("resolved_at", { mode: "timestamp" }),
-});
+}, (table) => ({
+  ptWalletIdx: index("idx_pt_wallet").on(table.walletAddress),
+  ptMarketIdx: index("idx_pt_market").on(table.marketId),
+  ptStatusIdx: index("idx_pt_status").on(table.status),
+  ptDjIdx: index("idx_pt_dj").on(table.decisionJournalId),
+  ptResolvedAtIdx: index("idx_pt_resolved_at").on(table.resolvedAt),
+}));
 
 // ─── PnlSnapshot ───────────────────────────────────────────────
 
-export const pnlSnapshots = sqliteTable("pnl_snapshot", {
+export const pnlSnapshots = sqliteTable("pnl_snapshot",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   paperTradeId: integer("paper_trade_id")
     .notNull()
@@ -166,11 +197,15 @@ export const pnlSnapshots = sqliteTable("pnl_snapshot", {
   collectedAt: integer("collected_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  pnlPTIdx: index("idx_pnl_pt").on(table.paperTradeId),
+  pnlCollectedIdx: index("idx_pnl_collected").on(table.collectedAt),
+}));
 
 // ─── OutcomeReview ─────────────────────────────────────────────
 
-export const outcomeReviews = sqliteTable("outcome_review", {
+export const outcomeReviews = sqliteTable("outcome_review",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   decisionJournalId: integer("decision_journal_id").references(
     () => decisionJournals.id
@@ -191,11 +226,15 @@ export const outcomeReviews = sqliteTable("outcome_review", {
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  orPtIdx: index("idx_or_pt").on(table.paperTradeId),
+  orDjIdx: index("idx_or_dj").on(table.decisionJournalId),
+}));
 
 // ─── RuleSet ───────────────────────────────────────────────────
 
-export const ruleSets = sqliteTable("rule_set", {
+export const ruleSets = sqliteTable("rule_set",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   version: text("version").notNull(),
   active: integer("active", { mode: "boolean" }).notNull().default(false),
@@ -206,11 +245,15 @@ export const ruleSets = sqliteTable("rule_set", {
   updatedAt: integer("updated_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  rsActiveIdx: index("idx_rs_active").on(table.active),
+  rsVersionIdx: index("idx_rs_version").on(table.version),
+}));
 
 // ─── RuleChange ────────────────────────────────────────────────
 
-export const ruleChanges = sqliteTable("rule_change", {
+export const ruleChanges = sqliteTable("rule_change",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   oldRuleSetId: integer("old_rule_set_id").references(() => ruleSets.id),
   newRuleSetId: integer("new_rule_set_id").references(() => ruleSets.id),
@@ -222,11 +265,16 @@ export const ruleChanges = sqliteTable("rule_change", {
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  rcOldSetIdx: index("idx_rc_old_set").on(table.oldRuleSetId),
+  rcNewSetIdx: index("idx_rc_new_set").on(table.newRuleSetId),
+  rcCreatedIdx: index("idx_rc_created").on(table.createdAt),
+}));
 
 // ─── DailyReport ───────────────────────────────────────────────
 
-export const dailyReports = sqliteTable("daily_report", {
+export const dailyReports = sqliteTable("daily_report",
+  {
   id: integer("id").primaryKey({ autoIncrement: true }),
   date: text("date").notNull().unique(),
   paperPnl: real("paper_pnl").default(0),
@@ -244,4 +292,6 @@ export const dailyReports = sqliteTable("daily_report", {
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => ({
+  drDateIdx: index("idx_dr_date").on(table.date),
+}));

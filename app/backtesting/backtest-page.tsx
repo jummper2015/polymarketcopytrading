@@ -1,6 +1,19 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import {
+  FlaskConical,
+  TrendingUp,
+  DollarSign,
+  Target,
+  AlertTriangle,
+  ClipboardList,
+  Trophy,
+  Activity,
+  CheckCircle2,
+  XCircle,
+  Clock,
+} from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatusDot } from "@/components/ui/status-dot";
@@ -39,12 +52,12 @@ function truncAddr(addr: string): string {
 }
 
 function statusBadge(status: string) {
-  const map: Record<string, { variant: "success" | "warning" | "danger"; label: string }> = {
-    track: { variant: "success", label: "Track" },
-    watch: { variant: "warning", label: "Watch" },
-    ignore: { variant: "danger", label: "Ignore" },
+  const map: Record<string, "success" | "warning" | "danger"> = {
+    track: "success",
+    watch: "warning",
+    ignore: "danger",
   };
-  return map[status] ?? { variant: "neutral" as const, label: status };
+  return map[status] ?? "neutral";
 }
 
 /** Build cumulative PnL data points from backtest trades sorted by timestamp */
@@ -135,18 +148,19 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
   return (
     <div className="animate-fade-in space-y-6">
       {/* Page header */}
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight text-surface-50">
+      <div className="page-header">
+        <h2 className="flex items-center gap-2">
+          <FlaskConical className="size-6 text-purple-400" />
           Backtesting
         </h2>
-        <p className="text-sm text-surface-400 mt-1">
+        <p>
           Simula copy trading histórico para cualquier wallet de Polymarket.
           Consulta APIs públicas en tiempo real — los resultados pueden tardar unos segundos.
         </p>
       </div>
 
       {/* ── Configuration Card ──────────────────────────────── */}
-      <Card title="Configuration" icon="🧪" subtitle="Set backtest parameters and run">
+      <Card title="Configuration" icon={<FlaskConical className="size-5 text-purple-400" />} subtitle="Set backtest parameters and run">
         <div className="space-y-5">
           {/* Mode toggle */}
           <div className="flex items-center gap-2">
@@ -208,7 +222,7 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
                           title={`${w.label ?? truncAddr(w.address)} — Score: ${w.globalScore.toFixed(2)}`}
                         >
                           <StatusDot
-                            variant={sb.variant === "success" ? "active" : sb.variant === "warning" ? "watch" : "inactive"}
+                            variant={sb === "success" ? "active" : sb === "warning" ? "watch" : "inactive"}
                             size="sm"
                           />
                           {w.label ?? truncAddr(w.address)}
@@ -309,7 +323,7 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
 
       {/* ── Error State ─────────────────────────────────────── */}
       {runState === "error" && (
-        <Card title="Error" icon="⚠️">
+        <Card title="Error" icon={<AlertTriangle className="size-5 text-red-400" />}>
           <p className="text-sm text-red-400">{errorMsg}</p>
           <p className="text-xs text-surface-500 mt-2">
             The backtest queries Polymarket's public APIs. Make sure the wallet
@@ -320,7 +334,7 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
 
       {/* ── Empty / No results ──────────────────────────────── */}
       {result && result.totalTrades === 0 && (
-        <Card title="No Trades Found" icon="📭">
+        <Card title="No Trades Found" icon={<XCircle className="size-5 text-surface-400" />}>
           <p className="text-sm text-surface-400">
             No trades found for <span className="font-mono text-surface-300">{truncAddr(result.walletAddress)}</span> in
             the last {days} days. Try a longer period or a different wallet.
@@ -334,7 +348,9 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
           {/* Summary cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Card compact>
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider">Total PnL</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                <DollarSign className="size-3" /> Total PnL
+              </p>
               <p className={`text-lg font-bold tabular-nums ${result.totalPnl >= 0 ? "text-brand-400" : "text-red-400"}`}>
                 {result.totalPnl >= 0 ? "+" : ""}${result.totalPnl.toFixed(2)}
               </p>
@@ -343,14 +359,18 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
               </p>
             </Card>
             <Card compact>
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider">ROI</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                <TrendingUp className="size-3" /> ROI
+              </p>
               <p className={`text-lg font-bold tabular-nums ${result.roi >= 0 ? "text-brand-400" : "text-red-400"}`}>
                 {fmtPct(result.roi)}
               </p>
               <ScoreBar value={result.roi > 0 ? Math.min(result.roi * 5, 1) : 0} size="sm" className="mt-1.5" />
             </Card>
             <Card compact>
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider">Win Rate</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                <Target className="size-3" /> Win Rate
+              </p>
               <p className="text-lg font-bold tabular-nums text-surface-50">
                 {fmtPct(result.winRate)}
               </p>
@@ -359,7 +379,9 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
               </p>
             </Card>
             <Card compact>
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider">Max Drawdown</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                <Activity className="size-3" /> Max Drawdown
+              </p>
               <p className="text-lg font-bold tabular-nums text-red-400">
                 {fmtPct(Math.abs(result.maxDrawdown))}
               </p>
@@ -371,13 +393,13 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
 
           {/* PnL Chart */}
           {pnlData.length > 0 && (
-            <Card title="Cumulative PnL" subtitle={`${truncAddr(result.walletAddress)} · ${result.startDate} → ${result.endDate}`} icon="📈">
+            <Card title="Cumulative PnL" subtitle={`${truncAddr(result.walletAddress)} · ${result.startDate} → ${result.endDate}`} icon={<TrendingUp className="size-5 text-brand-400" />}>
               <PnlChart data={pnlData} />
             </Card>
           )}
 
           {/* Trade table */}
-          <Card title="Trade Details" subtitle={`Showing ${Math.min(25, result.trades.length)} of ${result.trades.length} trades`} icon="📋">
+          <Card title="Trade Details" subtitle={`Showing ${Math.min(25, result.trades.length)} of ${result.trades.length} trades`} icon={<ClipboardList className="size-5 text-brand-400" />}>
             {result.trades.length === 0 ? (
               <p className="text-sm text-surface-500 py-4">No trades to display.</p>
             ) : (
@@ -419,12 +441,12 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
                           <td className="table-cell text-center">
                             {t.resolved ? (
                               t.won ? (
-                                <Badge variant="success" icon="✅">Win</Badge>
+                                <Badge variant="success" icon={<CheckCircle2 className="size-3" />}>Win</Badge>
                               ) : (
-                                <Badge variant="danger" icon="❌">Loss</Badge>
+                                <Badge variant="danger" icon={<XCircle className="size-3" />}>Loss</Badge>
                               )
                             ) : (
-                              <Badge variant="neutral" icon="⏳">Open</Badge>
+                              <Badge variant="neutral" icon={<Clock className="size-3" />}>Open</Badge>
                             )}
                           </td>
                         </tr>
@@ -449,7 +471,9 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
           {/* Comparison summary */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <Card compact>
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider">Best Wallet</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                <Trophy className="size-3 text-brand-400" /> Best Wallet
+              </p>
               <p className="text-sm font-mono text-brand-400 mt-1">
                 {truncAddr(comparison.best!.walletAddress)}
               </p>
@@ -458,7 +482,9 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
               </p>
             </Card>
             <Card compact>
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider">Worst Wallet</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                <XCircle className="size-3 text-red-400" /> Worst Wallet
+              </p>
               <p className="text-sm font-mono text-red-400 mt-1">
                 {truncAddr(comparison.worst!.walletAddress)}
               </p>
@@ -467,7 +493,9 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
               </p>
             </Card>
             <Card compact>
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider">Avg ROI</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                <TrendingUp className="size-3" /> Avg ROI
+              </p>
               <p className={`text-lg font-bold tabular-nums ${comparison.averageRoi >= 0 ? "text-brand-400" : "text-red-400"}`}>
                 {fmtPct(comparison.averageRoi)}
               </p>
@@ -476,7 +504,9 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
               </p>
             </Card>
             <Card compact>
-              <p className="text-[10px] text-surface-400 uppercase tracking-wider">Avg Win Rate</p>
+              <p className="text-[10px] text-surface-400 uppercase tracking-wider flex items-center gap-1">
+                <Target className="size-3" /> Avg Win Rate
+              </p>
               <p className="text-lg font-bold tabular-nums text-surface-50">
                 {fmtPct(comparison.averageWinRate)}
               </p>
@@ -487,7 +517,7 @@ export function BacktestPage({ knownWallets }: BacktestPageProps) {
           </div>
 
           {/* Comparison table */}
-          <Card title="Wallet Comparison" subtitle="Sorted by total PnL" icon="🏆">
+          <Card title="Wallet Comparison" subtitle="Sorted by total PnL" icon={<Trophy className="size-5 text-amber-400" />}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
