@@ -910,3 +910,20 @@ Implementado `scripts/update-pnl.ts` (~120 líneas). Actualiza el PnL simulado d
 - **v2 podría incluir:** Ejecución real con wallet de prueba, PostgreSQL en Supabase, autenticación de usuario, notificaciones push.
 - **Integración Max HQ:** El dashboard está diseñado para encajar como un módulo dentro de Max HQ. Los estilos deben ser compatibles.
 - **Hermes como operador:** En producción, Hermes ejecutaría los scripts programados vía cron. El dashboard es solo lectura.
+
+### [2026-07-13] — Cierre de brechas finales: Hitos 4.4, 6.4, 7.4, tests y seguridad
+
+**Rama:** `main`
+**Estado:** ✅ Completado
+
+**Resumen:**
+Revisión completa de PLAN.md, ROADMAP.md, DEVLOG.md y SAFETY.md. Identificadas y cerradas todas las brechas:
+
+1. `lib/simulation/benchmarks.ts` (Hito 4.4): compareBotVsBlindCopy, trackMissedWinners, trackAvoidedLosers, trackSpreadLossesAvoided
+2. `lib/reports/weekly-report.ts` (Hito 6.4): generateWeeklyReport, formatWeeklyReportForTelegram
+3. `app/wallets/[address]/page.tsx` (Hito 7.4): Página dinámica de perfil de wallet con métricas, scores y rendimiento
+4. `tests/rules/rule-versioning.test.ts` y `tests/rules/auto-update.test.ts` (Hitos 5.3, 5.4)
+5. `tests/simulation/benchmarks.test.ts` y `tests/simulation/update-pnl.test.ts` (Hitos 4.6, 9.2)
+6. `db/index.ts`: Enforcement SIMULATION_MODE="paper_only" al inicio
+
+Resultados: TypeScript 0 errores, 343 tests pasando (15 archivos), +1100 líneas nuevas.

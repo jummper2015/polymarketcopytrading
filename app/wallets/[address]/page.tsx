@@ -209,7 +209,7 @@ export default async function WalletProfilePage({
               <span className="text-surface-400">Last Scanned</span>
               <span className="text-surface-200 font-mono text-xs">
                 {wallet.lastScannedAt
-                  ? new Date(wallet.lastScannedAt.getTime()).toLocaleString()
+                  ? wallet.lastScannedAt.toLocaleString()
                   : "—"}
               </span>
             </div>
@@ -399,7 +399,7 @@ export default async function WalletProfilePage({
                     </td>
                     <td className="table-cell text-right text-xs text-surface-500">
                       {t.timestamp
-                        ? new Date(t.timestamp * 1000).toLocaleDateString()
+                        ? new Date(t.timestamp.getTime()).toLocaleDateString()
                         : "—"}
                     </td>
                   </tr>

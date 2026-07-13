@@ -92,7 +92,7 @@ describe("loadActiveRules", () => {
     const rules = await loadActiveRules();
     expect(rules).not.toBeNull();
     expect(rules.version).toBe("1.0.0");
-    expect(rules.active).toBe(1);
+    expect(rules.active).toBe(true);
 
     // Verify it was inserted into the DB
     const rows = sqlite().prepare("SELECT * FROM rule_set").all() as unknown[];
@@ -108,6 +108,7 @@ describe("loadActiveRules", () => {
 
     const rules = await loadActiveRules();
     expect(rules.version).toBe("2.0.0");
+    expect(rules.active).toBe(true);
   });
 
   it("returns only active rules (not inactive)", async () => {
@@ -129,7 +130,7 @@ describe("parseRules", () => {
     const record = {
       id: 1,
       version: "1.0.0",
-      active: 1,
+      active: true,
       rulesJson: JSON.stringify(getDefaultRules()),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -144,7 +145,7 @@ describe("parseRules", () => {
     const record = {
       id: 1,
       version: "1.0.0",
-      active: 1,
+      active: true,
       rulesJson: JSON.stringify({ version: "1.1.0", thresholds: { minLiquidity: 500 } }),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -202,10 +203,11 @@ describe("applyRuleChange", () => {
     };
 
     const result = await applyRuleChange(proposal);
+    // oldRuleSet is the snapshot BEFORE deactivation (active=true)
     expect(result.oldRuleSet.version).toBe("1.0.0");
-    expect(result.oldRuleSet.active).toBe(0);
+    expect(result.oldRuleSet.active).toBe(true);
     expect(result.newRuleSet.version).toBe("1.0.1");
-    expect(result.newRuleSet.active).toBe(1);
+    expect(result.newRuleSet.active).toBe(true);
     expect(result.change.changedBy).toBe("hermes");
     expect(result.change.reason).toBe("Test tightening");
 

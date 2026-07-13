@@ -18,7 +18,7 @@ vi.mock("@/db", () => {
   sqlite.pragma("journal_mode = WAL");
 
   const tables = [
-    `CREATE TABLE wallet_profile (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, address text UNIQUE NOT NULL, label text, source_rank integer, status text NOT NULL, roi30d real, consistency_score real, copyability_score real, one_hit_wonder_penalty real, global_score real, best_category text, category_strengths_json text, average_trade_size real, trade_count30d integer, resolved_trade_count30d integer, win_rate30d real, average_liquidity real, average_spread real, average_entry_timing real, copyability_notes text, risk_notes text, last_scanned_at integer, created_at integer, updated_at integer)`,
+    `CREATE TABLE wallet_profile (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, address text UNIQUE NOT NULL, label text, source_rank integer, status text NOT NULL, roi_30d real, consistency_score real, copyability_score real, one_hit_wonder_penalty real, global_score real, best_category text, category_strengths_json text, average_trade_size real, trade_count_30d integer, resolved_trade_count_30d integer, win_rate_30d real, average_liquidity real, average_spread real, average_entry_timing real, copyability_notes text, risk_notes text, last_scanned_at integer, created_at integer, updated_at integer)`,
     `CREATE TABLE observed_trade (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, wallet_address text NOT NULL, market_id text NOT NULL, condition_id text, market_question text, market_category text, outcome text, side text, wallet_entry_price real, detected_price real, size real, timestamp integer DEFAULT (unixepoch()) NOT NULL, raw_trade_json text, created_at integer DEFAULT (unixepoch()) NOT NULL)`,
     `CREATE TABLE decision_journal (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, observed_trade_id integer, wallet_address text NOT NULL, market_id text NOT NULL, decision text NOT NULL, copy_score real DEFAULT 0, confidence real DEFAULT 0, reasons_json text, risks_json text, wallet_quality_score real DEFAULT 0, roi_score real DEFAULT 0, consistency_score real DEFAULT 0, copyability_score real DEFAULT 0, category_fit_score real DEFAULT 0, entry_timing_score real DEFAULT 0, spread_score real DEFAULT 0, liquidity_score real DEFAULT 0, thesis_score real DEFAULT 0, simulated_position_size real, created_at integer DEFAULT (unixepoch()) NOT NULL)`,
     `CREATE TABLE paper_trade (id integer PRIMARY KEY AUTOINCREMENT NOT NULL, decision_journal_id integer, wallet_address text NOT NULL, market_id text NOT NULL, outcome text, side text NOT NULL, entry_price real NOT NULL, current_price real, simulated_position_size real NOT NULL, unrealized_pnl real DEFAULT 0, realized_pnl real DEFAULT 0, status text DEFAULT 'open' NOT NULL, opened_at integer DEFAULT (unixepoch()) NOT NULL, closed_at integer, resolved_at integer)`,
@@ -59,19 +59,19 @@ beforeEach(() => {
 
 function seedWallet(overrides: Record<string, unknown> = {}) {
   const stmt = sqlite().prepare(
-    `INSERT INTO wallet_profile (address, status, roi30d, global_score, consistency_score, copyability_score, trade_count30d, resolved_trade_count30d, win_rate30d, created_at, updated_at)
+    `INSERT INTO wallet_profile (address, status, roi_30d, global_score, consistency_score, copyability_score, trade_count_30d, resolved_trade_count_30d, win_rate_30d, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   );
   stmt.run(
     overrides.address ?? "0xTRACKED",
     overrides.status ?? "track",
-    overrides.roi30d ?? 0.5,
+    overrides.roi_30d ?? 0.5,
     overrides.global_score ?? 0.75,
     overrides.consistency_score ?? 0.7,
     overrides.copyability_score ?? 0.7,
-    overrides.trade_count30d ?? 20,
-    overrides.resolved_trade_count30d ?? 10,
-    overrides.win_rate30d ?? 0.6,
+    overrides.trade_count_30d ?? 20,
+    overrides.resolved_trade_count_30d ?? 10,
+    overrides.win_rate_30d ?? 0.6,
     now,
     now
   );

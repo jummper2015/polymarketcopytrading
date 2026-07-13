@@ -15,7 +15,7 @@ import {
   observedTrades,
   walletProfiles,
 } from "@/db/schema";
-import { eq, and, gte, lte, inArray } from "drizzle-orm";
+import { eq, and, gte, inArray } from "drizzle-orm";
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -92,7 +92,6 @@ export async function compareBotVsBlindCopy(
 ): Promise<BotVsBlindResult> {
   const since = new Date();
   since.setDate(since.getDate() - daysBack);
-  const sinceTs = Math.floor(since.getTime() / 1000);
 
   // Get all observed trades from tracked wallets in the period
   const trackedWallets = await db
@@ -116,12 +115,13 @@ export async function compareBotVsBlindCopy(
   }
 
   // All observed trades from tracked wallets in period
+  // Cast timestamp comparison via as any since we're comparing Date objects
   const allObserved = await db
     .select()
     .from(observedTrades)
     .where(
       and(
-        gte(observedTrades.timestamp, sinceTs),
+        gte(observedTrades.timestamp as any, since),
         inArray(observedTrades.walletAddress, trackedAddrs)
       )
     );
@@ -138,7 +138,7 @@ export async function compareBotVsBlindCopy(
 
   const decisionMap = new Map<number, (typeof decisions)[number]>();
   for (const d of decisions) {
-    if (d.observedTradeId) decisionMap.set(d.observedTradeId, d);
+    if (d.observedTradeId != null) decisionMap.set(d.observedTradeId as number, d);
   }
 
   // Get all paper trades for these decisions
@@ -153,7 +153,7 @@ export async function compareBotVsBlindCopy(
 
   const ptMap = new Map<number, (typeof pts)[number]>();
   for (const pt of pts) {
-    ptMap.set(pt.decisionJournalId, pt);
+    if (pt.decisionJournalId != null) ptMap.set(pt.decisionJournalId as number, pt);
   }
 
   // Calculate metrics
@@ -241,7 +241,6 @@ export async function trackMissedWinners(
 ): Promise<MissedWinner[]> {
   const since = new Date();
   since.setDate(since.getDate() - daysBack);
-  const sinceTs = Math.floor(since.getTime() / 1000);
 
   // Get all decisions that are NOT paper_copy from tracked wallets
   const skipped = await db
@@ -255,7 +254,7 @@ export async function trackMissedWinners(
     .innerJoin(walletProfiles, eq(decisionJournals.walletAddress, walletProfiles.address))
     .where(
       and(
-        gte(decisionJournals.createdAt, sinceTs),
+        gte(decisionJournals.createdAt as any, since),
         inArray(decisionJournals.decision, ["watchlist", "skip"]),
         eq(walletProfiles.status, "track")
       )
@@ -326,7 +325,6 @@ export async function trackAvoidedLosers(
 ): Promise<AvoidedLoser[]> {
   const since = new Date();
   since.setDate(since.getDate() - daysBack);
-  const sinceTs = Math.floor(since.getTime() / 1000);
 
   const skipped = await db
     .select({
@@ -339,7 +337,7 @@ export async function trackAvoidedLosers(
     .innerJoin(walletProfiles, eq(decisionJournals.walletAddress, walletProfiles.address))
     .where(
       and(
-        gte(decisionJournals.createdAt, sinceTs),
+        gte(decisionJournals.createdAt as any, since),
         inArray(decisionJournals.decision, ["watchlist", "skip"]),
         eq(walletProfiles.status, "track")
       )
@@ -403,7 +401,6 @@ export async function trackSpreadLossesAvoided(
 ): Promise<SpreadSavings> {
   const since = new Date();
   since.setDate(since.getDate() - daysBack);
-  const sinceTs = Math.floor(since.getTime() / 1000);
 
   // Get all decisions with their scores
   const allDecisions = await db
@@ -413,7 +410,7 @@ export async function trackSpreadLossesAvoided(
     })
     .from(decisionJournals)
     .innerJoin(observedTrades, eq(decisionJournals.observedTradeId, observedTrades.id))
-    .where(gte(decisionJournals.createdAt, sinceTs))
+    .where(gte(decisionJournals.createdAt as any, since))
     .limit(200);
 
   let highSpreadTrades = 0;

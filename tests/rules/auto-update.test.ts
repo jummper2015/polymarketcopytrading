@@ -78,7 +78,7 @@ describe("proposeRuleChange", () => {
     expect(proposal!.changes.thresholds?.minLiquidity).toBeLessThan(
       getDefaultRules().thresholds.minLiquidity
     );
-    expect(proposal!.reason).toContain("liquidity");
+    expect(proposal!.reason).toContain("minLiquidity");
   });
 
   it("does NOT relax minLiquidity when missedWinners is 0", () => {

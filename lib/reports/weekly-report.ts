@@ -5,10 +5,16 @@
 // Designed to run every Sunday generating a report for Mon-Sun.
 
 import { db } from "@/db";
-import { dailyReports, type DailyReportRow } from "@/db/schema";
-import { gte, lte, and, desc } from "drizzle-orm";
-import { getPaperPortfolioStats } from "@/lib/simulation/paper-trader";
+import { dailyReports } from "@/db/schema";
+import { gte, lte, and } from "drizzle-orm";
 import { compareBotVsBlindCopy } from "@/lib/simulation/benchmarks";
+
+// ─── Helpers ───────────────────────────────────────────────────
+
+/** Simple MarkdownV2 escape for dynamic content like wallet labels */
+function escapeMd(text: string): string {
+  return text.replace(/([_*\[\]()~`>#+\-=|{}.!])/g, "\\$1");
+}
 
 // ─── Types ─────────────────────────────────────────────────────
 
@@ -261,7 +267,7 @@ export function formatWeeklyReportForTelegram(
   ];
 
   if (report.topWallet) {
-    const name = report.topWallet.label ?? report.topWallet.address.slice(0, 12) + "...";
+    const name = escapeMd(report.topWallet.label ?? report.topWallet.address.slice(0, 12) + "...");
     lines.push(`*🏆 Top Wallet*`);
     lines.push(`• ${name}: +$${report.topWallet.pnl.toFixed(2)}`);
     lines.push("");
