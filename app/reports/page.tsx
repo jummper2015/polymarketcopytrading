@@ -9,6 +9,22 @@ import {
 
 export const revalidate = 60;
 
+/** Safely parse <cmd> tags from translated strings without triggering
+ *  next-intl serialization issues with Client Components. */
+function formatCmd(text: string) {
+  const parts = text.split(/(<cmd>.*?<\/cmd>)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith("<cmd>") && part.endsWith("</cmd>")) {
+      return (
+        <code key={i} className="text-brand-400">
+          {part.slice(5, -6)}
+        </code>
+      );
+    }
+    return part;
+  });
+}
+
 function parseBestWallets(json: string | null) {
   if (!json) return [];
   try {
@@ -34,7 +50,7 @@ export default async function ReportsPage() {
           <FileText className="size-6 text-blue-400" />
           {t("title")}
         </h2>
-        <p>{t.rich("description", { cmd: (chunks) => <code className="text-brand-400">{chunks}</code> })}</p>
+        <p>{formatCmd(t("description"))}</p>
       </div>
 
       <div className="space-y-4">
@@ -43,7 +59,7 @@ export default async function ReportsPage() {
             <div className="text-center py-12 text-surface-500">
               <p className="text-lg mb-1">{t("noReports")}</p>
               <p className="text-sm">
-                {t.rich("runReport", { cmd: (chunks) => <code className="text-brand-400">{chunks}</code> })}
+                {formatCmd(t("runReport"))}
               </p>
             </div>
           </Card>

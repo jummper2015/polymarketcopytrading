@@ -1,0 +1,51 @@
+# ─── MESIRVE CopyBot — Cron Schedule ────────────────────────────
+#
+# INSTALL:
+#   bash scripts/setup-cron.sh
+#
+# VERIFY:
+#   crontab -l
+#
+# REMOVE ALL:
+#   bash scripts/setup-cron.sh --remove
+#
+# LOGS:
+#   logs/pipeline.log  — main pipeline output
+#   logs/daily.log     — daily jobs output
+#
+# REQUIREMENTS:
+#   - Node.js >=20 and npm in PATH
+#   - Project dependencies installed (npm install)
+#   - .env.local configured (at least SIMULATION_MODE=paper_only)
+#
+# NOTE: The PATH variable and project directory are auto-detected
+# and injected by scripts/setup-cron.sh. Do NOT run `crontab` on
+# this file directly — use the setup script instead.
+
+# ─── Cron PATH (injected by setup-cron.sh) ──────────────────────
+PATH=/usr/local/bin:/usr/bin:/bin
+SHELL=/bin/bash
+
+# ─── Every 15 minutes: Main Pipeline ────────────────────────────
+# monitor → score → paper:create → update-pnl → review
+# Uses flock to prevent overlapping runs if previous iteration is still active.
+*/15 * * * * cd PROJECT_DIR && flock -n PROJECT_DIR/logs/.runner.lock npm run runner -- --once >> PROJECT_DIR/logs/pipeline.log 2>&1
+
+# ─── Daily at 00:00 UTC: Scan Leaderboard ───────────────────────
+# Fetches top 500 wallets from Polymarket
+0 0 * * * cd PROJECT_DIR && npm run scan:leaderboard >> PROJECT_DIR/logs/daily.log 2>&1
+
+# ─── Daily at 00:30 UTC: Profile Wallets ────────────────────────
+# Scores wallets and saves profiles (skips recently scanned ones)
+30 0 * * * cd PROJECT_DIR && npm run scan:wallets -- --skip-recent >> PROJECT_DIR/logs/daily.log 2>&1
+
+# ─── Daily at 01:00 UTC: Auto-Improve Rules ─────────────────────
+# Analyzes performance and adjusts scoring thresholds
+0 1 * * * cd PROJECT_DIR && npm run update:rules >> PROJECT_DIR/logs/daily.log 2>&1
+
+# ─── Daily at 08:00 UTC: Daily Report ───────────────────────────
+# Generates report and sends via Telegram (if configured)
+0 8 * * * cd PROJECT_DIR && npm run report:daily >> PROJECT_DIR/logs/daily.log 2>&1
+
+# ─── Monthly log rotation (1st of month at 03:00) ───────────────
+0 3 1 * * rm -f PROJECT_DIR/logs/*.log

@@ -1,0 +1,120 @@
+# ─── MESIRVE CopyBot — Daily Cron Jobs ─────────────────────────
+# Runs once per day at scheduled UTC times:
+#   00:00 — scan:leaderboard   (fetch top 500 Polymarket wallets)
+#   00:30 — scan:wallets       (profile & score wallets)
+#   01:00 — update:rules       (auto-improve scoring thresholds)
+#   08:00 — report:daily       (generate report; Telegram is optional)
+#
+# REQUIRED SECRETS (Settings → Secrets and variables → Actions):
+#   • TURSO_DATABASE_URL   — libsql://your-db.turso.io
+#   • TURSO_AUTH_TOKEN     — your Turso auth token
+#
+# OPTIONAL SECRETS (for Telegram reports):
+#   • TELEGRAM_BOT_TOKEN   — Telegram bot token from @BotFather
+#   • TELEGRAM_CHAT_ID     — Telegram chat/group/channel ID
+
+name: Daily Tasks
+
+on:
+  schedule:
+    - cron: '0 0 * * *'   # 00:00 — Leaderboard scan
+    - cron: '30 0 * * *'  # 00:30 — Wallet profiling
+    - cron: '0 1 * * *'   # 01:00 — Rule updates
+    - cron: '0 8 * * *'   # 08:00 — Daily report
+  workflow_dispatch:
+    inputs:
+      task:
+        description: 'Task to run'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - scan:leaderboard
+          - scan:wallets
+          - update:rules
+          - report:daily
+
+concurrency:
+  group: daily-tasks
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    name: Daily Tasks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Determine task
+        id: task
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "cmd=${{ github.event.inputs.task }}" >> $GITHUB_OUTPUT
+          else
+            HOUR=$(date -u +%H)
+            MINUTE=$(date -u +%M)
+            # Wide 25-min windows to handle cron drift (GitHub may fire up to 15 min late)
+            if [[ "$HOUR" == "00" && "$MINUTE" -lt "25" ]]; then
+              echo "cmd=scan:leaderboard" >> $GITHUB_OUTPUT
+            elif [[ "$HOUR" == "00" ]]; then
+              echo "cmd=scan:wallets" >> $GITHUB_OUTPUT
+            elif [[ "$HOUR" == "01" && "$MINUTE" -lt "30" ]]; then
+              echo "cmd=update:rules" >> $GITHUB_OUTPUT
+            elif [[ "$HOUR" == "08" && "$MINUTE" -lt "30" ]]; then
+              echo "cmd=report:daily" >> $GITHUB_OUTPUT
+            else
+              echo "cmd=unknown" >> $GITHUB_OUTPUT
+            fi
+          fi
+        shell: bash
+
+      - name: Run scan:leaderboard
+        if: steps.task.outputs.cmd == 'scan:leaderboard' || steps.task.outputs.cmd == 'all'
+        env:
+          SIMULATION_MODE: paper_only
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: npm run scan:leaderboard
+
+      - name: Run scan:wallets
+        if: steps.task.outputs.cmd == 'scan:wallets' || steps.task.outputs.cmd == 'all'
+        env:
+          SIMULATION_MODE: paper_only
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: npm run scan:wallets -- --skip-recent
+
+      - name: Run update:rules
+        if: steps.task.outputs.cmd == 'update:rules' || steps.task.outputs.cmd == 'all'
+        env:
+          SIMULATION_MODE: paper_only
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: npm run update:rules
+
+      - name: Run report:daily
+        if: steps.task.outputs.cmd == 'report:daily' || steps.task.outputs.cmd == 'all'
+        env:
+          SIMULATION_MODE: paper_only
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: npm run report:daily
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "Daily task failed! Check logs at:"
+          echo "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

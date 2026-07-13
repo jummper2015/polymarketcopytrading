@@ -14,7 +14,7 @@ import {
   fetchWalletActivity,
   type WalletActivityItem,
 } from "../lib/adapters/leaderboard";
-import { fetchMarketData } from "../lib/adapters/markets";
+import { fetchMarketData, fetchMarketsByCondition } from "../lib/adapters/markets";
 import { sleep } from "../lib/adapters/client";
 
 // ─── Config ────────────────────────────────────────────────────
@@ -164,8 +164,11 @@ async function scanWallet(wallet: TrackedWallet): Promise<ScanResult> {
     await saveObservedTrade(wallet.address, trade);
 
     // Fetch and save market snapshot (best-effort, skip if fails)
-    if (trade.marketId) {
-      const saved = await saveMarketSnapshotIfNew(trade.marketId);
+    if (trade.marketId || trade.conditionId) {
+      const saved = await saveMarketSnapshotIfNew(
+        trade.marketId ?? "",
+        trade.conditionId
+      );
       if (saved) newMarkets++;
     }
 
@@ -246,7 +249,21 @@ async function saveObservedTrade(
 
 // ─── Market Snapshot ───────────────────────────────────────────
 
-async function saveMarketSnapshotIfNew(marketId: string): Promise<boolean> {
+/**
+ * Fetch and save a market snapshot.
+ *
+ * Handles two lookup strategies because Polymarket's APIs use different
+ * identifier formats:
+ *   1. Gamma API path param:  GET /markets/{slug}        — works with market slugs
+ *   2. Gamma API query param: GET /markets?condition_id=  — works with condition IDs
+ *
+ * The function tries strategy 1 first. If that fails with an API error,
+ * and a conditionId is available, it falls back to strategy 2.
+ */
+async function saveMarketSnapshotIfNew(
+  marketId: string,
+  conditionId?: string | null
+): Promise<boolean> {
   // Skip if we already have a recent snapshot (< 1h old)
   const oneHourAgo = new Date(Date.now() - 3600 * 1000);
   const existing = await db
@@ -262,13 +279,27 @@ async function saveMarketSnapshotIfNew(marketId: string): Promise<boolean> {
 
   if (existing.length > 0) return false;
 
-  // Fetch market data
+  // Strategy 1: try fetching by market slug (path param)
+  // Gamma API: GET /markets/{slug}
   let marketData;
   try {
     marketData = await fetchMarketData(marketId);
   } catch {
-    return false; // Market not found or API error
+    marketData = null;
   }
+
+  // Strategy 2 (fallback): if marketId is actually a conditionId,
+  // try fetching via query param: GET /markets?condition_id=
+  if (!marketData && conditionId) {
+    try {
+      const results = await fetchMarketsByCondition(conditionId);
+      marketData = results.length > 0 ? results[0] : null;
+    } catch {
+      marketData = null;
+    }
+  }
+
+  if (!marketData) return false; // Both strategies failed
 
   // Calculate time to resolution in seconds
   let timeToResolution: number | null = null;

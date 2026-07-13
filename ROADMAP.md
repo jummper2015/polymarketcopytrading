@@ -386,7 +386,21 @@ cd mesirve-copybot
 
 ---
 
-## Hito 11: Mejoras Futuras (PROPUESTO)
+## Hito 11: Correcciones del Pipeline y Automatización (⚠️ CRÍTICO)
+
+> **El bot NO está operando actualmente. Se requiere este hito antes de cualquier mejora futura.**
+
+| # | Tarea | Prioridad | Esfuerzo | Estado |
+|---|-------|-----------|----------|--------|
+| 11.1 | **Fix Market ID Mapping** — `monitor:trades` falla con 422 porque usa `conditionId` como `marketId`. Solución: buscar por `condition_id` via query param en Gamma API | 🔴 Crítica | Medio | ⏳ Pendiente |
+| 11.2 | **Crear script `paper:create`** — Invocar `processPendingDecisions()` desde un CLI script + añadir `npm run paper:create` | 🔴 Crítica | Bajo | ⏳ Pendiente |
+| 11.3 | **Crear scheduler/daemon** — Script runner que ejecute el pipeline completo en loop con delays configurados | 🔴 Crítica | Medio | ⏳ Pendiente |
+| 11.4 | **Re-scanear leaderboard + wallets** — Datos fresh (scan actual de 2025-05-15, >1 año) | 🟡 Alta | Medio | ⏳ Pendiente |
+| 11.5 | **Renombrar DB a `mesirve.db`** — Consistencia con el nombre del proyecto | 🟢 Baja | Bajo | ⏳ Pendiente |
+| 11.6 | **Health check endpoint** — Endpoint `/api/health` que reporte estado del pipeline | 🟡 Media | Bajo | ⏳ Pendiente |
+| 11.7 | **Logging estructurado** — Reemplazar console.log por logger con niveles y rotación | 🟡 Media | Medio | ⏳ Pendiente |
+
+## Hito 12: Mejoras Futuras (PROPUESTO)
 
 ### Corto Plazo
 - [ ] **Soporte multi-idioma (EN)** — Crear `messages/en.json` + añadir `"en"` a routing.locales

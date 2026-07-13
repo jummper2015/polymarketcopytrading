@@ -15,8 +15,33 @@
     }
   },
   "functions": {
+    "app/api/cron/route.ts": {
+      "maxDuration": 300
+    },
     "app/**/*.ts": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron?task=runner",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron?task=scan:leaderboard",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron?task=scan:wallets",
+      "schedule": "30 0 * * *"
+    },
+    {
+      "path": "/api/cron?task=update:rules",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron?task=report:daily",
+      "schedule": "0 8 * * *"
+    }
+  ]
 }

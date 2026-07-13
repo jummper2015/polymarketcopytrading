@@ -6,28 +6,52 @@ if (process.env.SIMULATION_MODE && process.env.SIMULATION_MODE !== "paper_only")
   );
 }
 
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
 import * as schema from "./schema";
 import path from "path";
 import fs from "fs";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
+// ─── Resolve Database URL ──────────────────────────────────────
+// Priority:
+//   1. TURSO_DATABASE_URL + TURSO_AUTH_TOKEN → Turso remote (Vercel)
+//   2. DATABASE_URL → custom path or local file
+//   3. Default → ./data/mesirve.db (local development)
+
+const tursoUrl = process.env.TURSO_DATABASE_URL;
+const tursoToken = process.env.TURSO_AUTH_TOKEN;
+
+let dbUrl: string;
+let authToken: string | undefined;
+
+if (tursoUrl) {
+  // Turso remote — use HTTP URL directly (works on Vercel serverless)
+  dbUrl = tursoUrl;
+  authToken = tursoToken;
+} else {
+  // Local SQLite file
+  const DATA_DIR = path.join(process.cwd(), "data");
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+
+  const filePath = process.env.DATABASE_URL?.startsWith("file:")
+    ? process.env.DATABASE_URL.slice(5)
+    : process.env.DATABASE_URL || "./data/mesirve.db";
+
+  dbUrl = `file:${path.resolve(filePath)}`;
 }
 
-const DB_PATH = process.env.DATABASE_URL?.startsWith("file:")
-  ? process.env.DATABASE_URL.slice(5)
-  : process.env.DATABASE_URL || "./data/hermes.db";
+const client = createClient({ url: dbUrl, authToken });
 
-const sqlite = new Database(DB_PATH);
+// Enable WAL mode + foreign keys for local SQLite.
+// Fire-and-forget — these PRAGMAs are not critical for correctness
+// (WAL mode persists across connections on existing DB files).
+if (!tursoUrl) {
+  client.execute("PRAGMA journal_mode = WAL").catch(() => {});
+  client.execute("PRAGMA foreign_keys = ON").catch(() => {});
+}
 
-// Enable WAL mode for better concurrent read performance
-sqlite.pragma("journal_mode = WAL");
-sqlite.pragma("foreign_keys = ON");
-
-export const db = drizzle(sqlite, { schema });
-export { sqlite };
+export const db = drizzle(client, { schema });
 export type Database = typeof db;
 export * from "drizzle-orm";

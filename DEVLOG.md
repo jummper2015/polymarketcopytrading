@@ -4,6 +4,151 @@
 
 ---
 
+## Diagnóstico General: ¿Por qué el Bot NO está Operando?
+
+### Resumen Ejecutivo
+
+Tras una revisión exhaustiva del sistema, se identificaron **6 causas raíz** que impiden que el bot opere correctamente:
+
+| # | Causa | Severidad | Estado |
+|---|-------|-----------|--------|
+| 1 | **Falta de automatización/scheduler** | 🔴 Crítica | Sin resolver |
+| 2 | **Pipeline bloqueado en score:trades** (0 market snapshots) | 🔴 Crítica | Sin resolver |
+| 3 | **Script faltante: paper:create** (processPendingDecisions sin invocar) | 🔴 Crítica | Sin resolver |
+| 4 | **Market ID mismatch** entre APIs de Polymarket | 🟡 Alta | Sin resolver |
+| 5 | **Base de datos con nombre antiguo** (hermes.db vs mesirve.db) | 🟢 Baja | Sin resolver |
+| 6 | **Datos de seed/scan posiblemente obsoletos** (scan de 2025-05-15) | 🟡 Media | Sin resolver |
+
+---
+
+### 🔴 Causa 1: Falta de Automatización / Scheduler
+
+**Problema:** Todos los scripts son comandos CLI que se ejecutan una vez y terminan. No existe:
+- Cron job
+- systemd timer
+- Script daemon
+- Gestor de procesos (PM2, forever, etc.)
+- GitHub Actions / workflow programado
+
+**Evidencia:**
+```bash
+# Los scripts deben ejecutarse MANUALMENTE en este orden:
+npm run scan:leaderboard      # Diario
+npm run scan:wallets          # Diario
+npm run monitor:trades        # Cada 15 min
+npm run score:trades          # Cada 15 min
+npm run paper:update-pnl      # Cada hora
+npm run review:outcomes       # Cada hora
+npm run update:rules          # Diario
+npm run report:daily          # Diario
+```
+
+**Impacto:** Sin automatización, el bot nunca opera de forma continua.
+
+---
+
+### 🔴 Causa 2: Pipeline Bloqueado en score:trades
+
+**Problema:** El script `monitor:trades` no logra crear `market_snapshot` porque la API de Polymarket devuelve errores 422.
+
+**Estado actual de la base de datos:**
+```
+observed_trade:   13 registros (trades detectados)
+market_snapshot:  0  registros ← ¡CERO! Esto bloquea todo
+wallet_profile:   ~250 wallets
+paper_trade:      0  ← No hay trades porque no hay decisiones
+```
+
+**Causa raíz:**
+- `fetchWalletActivity()` en `leaderboard.ts` usa `conditionId` como `marketId`
+- `fetchMarketData()` en `markets.ts` llama a `gamma-api.polymarket.com/markets/{marketId}`
+- Gamma API espera un **slug** o **ID de mercado**, no un `conditionId`
+- Resultado: error 422 → `saveMarketSnapshotIfNew()` captura el error y retorna `false`
+- Sin market snapshots → `score:trades` no puede cargar datos de mercado → skips ALL trades
+
+**Flujo del error:**
+```
+1. monitor:trades detecta trade con conditionId = "0xabc..."
+2. Intenta fetchMarketData("0xabc...")  ← USANDO conditionId COMO marketId
+3. Gamma API: GET /markets/0xabc... → 422 Unprocessable Entity
+4. saveMarketSnapshotIfNew captura error → return false
+5. → market_snapshot queda vacía
+6. score:trades LEFT JOIN → no encuentra market_snapshot → skips trade
+7. → 0 decisiones, 0 paper trades
+```
+
+---
+
+### 🔴 Causa 3: Script Faltante paper:create
+
+**Problema:** `lib/simulation/paper-trader.ts` exporta `processPendingDecisions()` pero **NINGÚN SCRIPT LA INVOCA**.
+
+**Pipeline actual:**
+```
+monitor:trades → score:trades → ??? → paper:update-pnl → review:outcomes
+                                    ^
+                          FALTA ESTE ESLABÓN
+```
+
+**Impacto:** Incluso si `score:trades` generara decisiones `paper_copy`, nunca se crearían los PaperTrades simulados.
+
+---
+
+### 🟡 Causa 4: Market ID Mismatch
+
+**Problema:** La API de actividad de Polymarket (Data API) y la API de mercados (Gamma API) usan identificadores diferentes.
+
+**Detalle técnico:**
+- `leaderboard.ts` `fetchWalletActivity()` obtiene `conditionId` del campo `conditionId` en la respuesta
+- Este `conditionId` se asigna a `marketId` en `ObservedTrade`
+- `markets.ts` `fetchMarketData()` construye URL: `gamma-api.polymarket.com/markets/{marketId}`
+- Gamma API espera un slug de mercado (ej: `"will-the-federal-reserve-cut-rate"`) o un ID numérico
+- `conditionId` es un hash hexadecimal como `0xabc123...` → Gamma no lo reconoce → 422
+
+**Solución necesaria:** Usar `conditionId` para buscar mercados via query parameter en Gamma: `gamma-api.polymarket.com/markets?condition_id=0xabc...` en vez de path parameter.
+
+---
+
+### 🟢 Causa 5: Base de Datos con Nombre Antiguo
+
+**Problema:** El archivo se llama `data/hermes.db` cuando debería ser `data/mesirve.db` tras el renombre.
+
+**Impacto:** Bajo. Solo afecta consistencia de nombres. El `.env.local` apunta correctamente a `hermes.db`.
+
+---
+
+### 🟡 Causa 6: Datos Obsoletos
+
+**Problema:** El último scan del leaderboard es de **2025-05-15** (más de un año).
+
+**Impacto:** Las wallets en `wallet_profile` pueden no reflejar el estado actual del mercado. Los datos seed demo están etiquetados como `[DEMO]`.
+
+---
+
+## Plan de Acción Inmediato (Prioridad Alta)
+
+| Tarea | Prioridad | Esfuerzo | Dependencias |
+|-------|-----------|----------|--------------|
+| **A. Crear script paper:create** que invoque `processPendingDecisions()` | 🔴 Alta | Bajo (~30 líneas) | Causa 2 resuelta |
+| **B. Fix Market ID mapping** en `saveMarketSnapshotIfNew()` | 🔴 Alta | Medio (~50 líneas) | — |
+| **C. Crear script daemon/runner** que ejecute el pipeline completo | 🔴 Alta | Medio (~100 líneas) | A, B |
+| **D. Añadir comando `npm run paper:create`** en package.json | 🟡 Media | Bajo (~1 línea) | A |
+| **E. Renombrar DB** a mesirve.db | 🟢 Baja | Bajo (~1 línea) | — |
+| **F. Re-scanear leaderboard y wallets** con datos fresh | 🟡 Media | Medio (tiempo API) | B |
+| **G. Añadir logging y monitoreo de health** | 🟡 Media | Medio | — |
+
+---
+
+### Próximos Pasos Recomendados
+
+1. **Fix Market ID mapping** — Prioridad #1: Sin esto, no se pueden crear market snapshots
+2. **Crear script paper:create** — Prioridad #2: Cerrar el pipeline faltante
+3. **Crear scheduler/daemon** — Prioridad #3: Automatizar la ejecución
+4. **Re-scanear datos** — Prioridad #4: Tener datos frescos para operar
+
+
+---
+
 ## Formato de Entrada
 
 ```markdown
@@ -352,6 +497,28 @@ Actualización masiva de toda la documentación del proyecto:
 
 ---
 
+### [2026-07-13] — Diagnóstico Completo del Bot
+
+**Estado:** ✅ Completado
+
+**Resumen:**
+Diagnóstico exhaustivo para determinar por qué el bot no está operando. Se identificaron 6 causas raíz y se documentó un plan de acción con 7 tareas prioritarias.
+
+**Causas raíz:**
+1. 🔴 Falta de automatización/scheduler — todos los scripts son manuales
+2. 🔴 Pipeline bloqueado en score:trades — 0 market snapshots por API 422
+3. 🔴 Script faltante paper:create — processPendingDecisions() nunca se invoca
+4. 🟡 Market ID mismatch entre Data API (conditionId) y Gamma API (slug)
+5. 🟢 DB con nombre antiguo (hermes.db)
+6. 🟡 Datos de scan obsoletos (2025-05-15)
+
+**Archivos modificados/revisados:**
+- `DEVLOG.md` — Diagnóstico completo agregado al inicio
+- `ROADMAP.md` — Pendiente de actualizar con Hito 11 mejoras
+- `PLAN.md` — Pendiente de actualizar con mejoras propuestas
+
+---
+
 ## Lecciones Aprendidas
 
 1. **next-intl plugin es obligatorio**: Sin `createNextIntlPlugin()` en next.config.js, `getMessages()` falla con "couldn't find config file"
@@ -361,6 +528,9 @@ Actualización masiva de toda la documentación del proyecto:
 5. **CSS puro para componentes simples**: No siempre se necesita una librería. El tooltip de sidebar es ~50 líneas de CSS+React vs ~200 líneas con @floating-ui
 6. **DB indexes tempranos**: Mejor añadirlos en el schema desde el principio que tener que migrar después
 7. **force-dynamic → revalidate**: ISR con `revalidate = 60` es mejor que `force-dynamic` para páginas que no necesitan datos fresh en cada request
+8. **🧠 Market ID Mapping**: La API de actividad de Polymarket devuelve `conditionId`, pero Gamma API necesita query params `condition_id=`, no path param. **Siempre verificar los formatos de ID entre APIs.**
+9. **Pipeline completo**: Diseñar pipelines como DAGs — verificar que cada paso tiene un script que lo ejecuta, y que el paso siguiente existe.
+10. **Automatización desde el día 1**: Incluso scripts simples deberían tener un scheduler/cron desde el principio. Manual = olvidado.
 
 ---
 
@@ -372,6 +542,12 @@ Actualización masiva de toda la documentación del proyecto:
 | DT-002 | Tooltip puede overflowear en viewports muy angostos (<900px) | Baja | 2026-07-13 |
 | DT-003 | Journal, Wallet y Backtesting pages tienen traducciones pendientes | Media | 2026-07-13 |
 | DT-004 | Sin tests de integración para i18n | Baja | 2026-07-13 |
+| DT-005 | **Pipeline bloqueado**: `monitor:trades` no crea market snapshots (422 API) | 🔴 Alta | 2026-07-13 |
+| DT-006 | **Script faltante**: `paper:create` no existe → `processPendingDecisions()` nunca se invoca | 🔴 Alta | 2026-07-13 |
+| DT-007 | **Sin scheduler**: Todos los scripts son manuales, no hay automatización | 🔴 Alta | 2026-07-13 |
+| DT-008 | **DB con nombre antiguo**: `data/hermes.db` en vez de `data/mesirve.db` | 🟢 Baja | 2026-07-13 |
+| DT-009 | **Datos de scan obsoletos**: Último scan: 2025-05-15 (>1 año) | 🟡 Media | 2026-07-13 |
+| DT-010 | **Market ID mismatch**: `conditionId` usado como `marketId` en APIs de Gamma | 🔴 Alta | 2026-07-13 |
 
 ---
 
@@ -384,6 +560,7 @@ Actualización masiva de toda la documentación del proyecto:
 | SQLite no escala para datos históricos grandes | Baja (v1) | Bajo | Migrar a PostgreSQL en v2 si es necesario |
 | Wallets del leaderboard pueden ser bots/sybils | Alta | Medio | Scoring penaliza one-hit-wonders + detecta patrones |
 | next-intl breaking changes en future updates | Baja | Medio | next-intl v4 estable, API madura |
+| **Pipeline bloqueado** impide cualquier operación del bot | 🔴 Alta | Alto | Fixear Market ID mapping + crear paper:create + scheduler |
 
 ---
 
@@ -413,6 +590,7 @@ Actualización masiva de toda la documentación del proyecto:
 | 2026-07-13 | Hito 10: UI Polish | Theme, tooltips, icons, favicon | 343/343 ✅ | ~300 |
 | 2026-07-13 | Hito 10: i18n | next-intl, messages/es.json | 343/343 ✅ | ~600 |
 | 2026-07-13 | Documentación | README, PLAN, DEVLOG, ROADMAP | 343/343 ✅ | ~400 |
+| 2026-07-13 | **Diagnóstico completo del bot** | 6 causas raíz + plan de acción | 343/343 ✅ | — |
 
 ---
 
@@ -423,3 +601,7 @@ Actualización masiva de toda la documentación del proyecto:
 - **MESIRVE como operador:** En producción, MESIRVE ejecutaría los scripts programados vía cron. El dashboard es solo lectura.
 - **Multi-idioma:** La arquitectura next-intl está lista para inglés. Solo falta crear `messages/en.json` y añadir `"en"` a `routing.locales`.
 - **IA/ML:** El motor de scoring actual es basado en reglas. Un modelo ML podría mejorar significativamente la precisión de las decisiones.
+- **⚠️ Pipeline actual está roto:** El bot NO puede operar aunque se ejecuten los scripts manualmente.
+  - **Fix #1:** Market ID mapping en `monitor:trades` (usar `condition_id` query param en Gamma)
+  - **Fix #2:** Crear script `paper:create` que invoque `processPendingDecisions()`
+  - **Fix #3:** Crear scheduler/daemon que automatice el pipeline completo

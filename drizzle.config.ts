@@ -5,6 +5,6 @@ export default defineConfig({
   schema: "./db/schema.ts",
   out: "./db/migrations",
   dbCredentials: {
-    url: "./data/hermes.db",
+    url: "./data/mesirve.db",
   },
 });

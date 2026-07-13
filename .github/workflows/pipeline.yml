@@ -1,0 +1,55 @@
+# ─── MESIRVE CopyBot — 30-Minute Pipeline Runner ───────────────
+# Runs the full paper trading pipeline:
+#   monitor:trades → score:trades → paper:create → update-pnl → review:outcomes
+#
+# SCHEDULE: Every 30 minutes (UTC)
+#   • 30-min = 48 runs/day = ~96 min/day = ~2880 min/month
+#   • Use a public repo for unlimited free minutes, OR
+#   • Change to '0 * * * *' for hourly to stay under 2000 min private limit
+#
+# REQUIRED SECRETS (Settings → Secrets and variables → Actions):
+#   • TURSO_DATABASE_URL — libsql://your-db.turso.io
+#   • TURSO_AUTH_TOKEN  — your Turso auth token
+
+name: Pipeline Runner
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: pipeline-runner
+  cancel-in-progress: false
+
+jobs:
+  pipeline:
+    name: Pipeline (monitor → score → paper → pnl → review)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Pipeline
+        env:
+          SIMULATION_MODE: paper_only
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: npm run runner -- --once
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "Pipeline failed! Check logs at:"
+          echo "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

@@ -368,9 +368,63 @@ SIMULATION_MODE="paper_only"  # Siempre paper_only en v1
 
 ---
 
+## ⚠️ Diagnóstico: El Bot NO está Operando
+
+### Causas Raíz Identificadas
+
+Tras un diagnóstico completo del sistema (2026-07-13), se identificaron **6 causas raíz**:
+
+| # | Causa | Severidad |
+|---|-------|-----------|
+| 1 | **Falta de automatización/scheduler** — Todos los scripts son manuales (CLI) | 🔴 Crítica |
+| 2 | **Pipeline bloqueado en score:trades** — `monitor:trades` no crea `market_snapshot` (API 422) | 🔴 Crítica |
+| 3 | **Script faltante: paper:create** — `processPendingDecisions()` nunca se invoca | 🔴 Crítica |
+| 4 | **Market ID mismatch** — `conditionId` usado como `marketId` en Gamma API | 🟡 Alta |
+| 5 | **DB con nombre antiguo** — `data/hermes.db` en vez de `data/mesirve.db` | 🟢 Baja |
+| 6 | **Datos obsoletos** — Último scan de leaderboard: 2025-05-15 (>1 año) | 🟡 Media |
+
+### Plan de Acción Inmediato
+
+| Tarea | Prioridad | Esfuerzo | Dependencias |
+|-------|-----------|----------|--------------|
+| **A. Fix Market ID Mapping** — Usar query param `condition_id` en Gamma API en vez de path param | 🔴 Alta | Medio (~50 líneas) | — |
+| **B. Crear script paper:create** — Invocar `processPendingDecisions()` + `npm run paper:create` | 🔴 Alta | Bajo (~30 líneas) | A (para tener data) |
+| **C. Crear scheduler/daemon** — Runner en loop que ejecute pipeline completo | 🔴 Alta | Medio (~100 líneas) | A, B |
+| **D. Renombrar DB** a mesirve.db + arreglar default path | 🟢 Baja | Bajo (~1 línea) | — |
+| **E. Re-scanear leaderboard y wallets** | 🟡 Media | Medio (tiempo API) | A |
+| **F. Health check y logging** | 🟡 Media | Medio | — |
+
+### Pipeline Correcto (Target)
+```
+scan:leaderboard ──► scan:wallets ──► monitor:trades ──► score:trades ──► 
+paper:create ──► paper:update-pnl ──► review:outcomes ──► update:rules ──► report:daily
+                         ▲                                    ▲
+                 (cada hora, loop)                   (diario, loop)
+```
+
+### Pipeline Actual (Roto)
+```
+scan:leaderboard ──► scan:wallets ──► monitor:trades ──► score:trades ──► ?? (bloqueado)
+                                                                            ^
+                                                    No hay market_snapshot (422 error)
+                                                    + No hay paper:create script
+```
+
+---
+
 ## Mejoras Futuras Propuestas
 
-### Corto Plazo
+### Inmediatas (Hito 11 — Pipeline Fix, ⚠️ Crítico)
+- [ ] **Fix Market ID Mapping** — Usar query param `condition_id` en Gamma API (`/markets?condition_id=0x...`)
+- [ ] **Crear script paper:create** — CLI + comando npm para `processPendingDecisions()`
+- [ ] **Crear scheduler/daemon** — Automatizar el pipeline completo
+- [ ] **Re-scanear datos** — Leaderboard + wallets con datos fresh
+- [ ] **Renombrar DB** a mesirve.db
+- [ ] **Health check endpoint** — `/api/health` con estado del sistema
+- [ ] **Logging estructurado** — Logger con niveles (debug, info, warn, error) y rotación
+- [ ] **Tests de integración del pipeline** — Verificar end-to-end
+
+### Corto Plazo (Hito 12)
 - [ ] Soporte multi-idioma (EN) — Crear messages/en.json
 - [ ] Autenticación de usuarios (NextAuth)
 - [ ] TradingView chart integration
